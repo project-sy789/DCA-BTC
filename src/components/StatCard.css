@@ -50,11 +50,23 @@
 }
 
 .stat-value.positive {
-  color: var(--color-success);
+  color: #10b981;
+  text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
 }
 
 .stat-value.negative {
-  color: var(--color-error);
+  color: #ef4444;
+  text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+.stat-card:has(.stat-value.positive) {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, var(--color-surface-overlay) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.stat-card:has(.stat-value.negative) {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, var(--color-surface-overlay) 0%, rgba(239, 68, 68, 0.05) 100%);
 }
 
 .stat-unit {
