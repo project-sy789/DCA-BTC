@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import ROIChart from './ROIChart';
 import BTCAccumulationChart from './BTCAccumulationChart';
 import PortfolioValueChart from './PortfolioValueChart';
 import './ChartsSection.css';
@@ -6,6 +7,10 @@ import './ChartsSection.css';
 const ChartsSection = ({ purchases, currentBTCPrice }) => {
   return (
     <section className="charts-section">
+      <ROIChart 
+        purchases={purchases} 
+        currentBTCPrice={currentBTCPrice} 
+      />
       <BTCAccumulationChart 
         purchases={purchases} 
         currentBTCPrice={currentBTCPrice} 

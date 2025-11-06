@@ -1,0 +1,156 @@
+.roi-chart {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--spacing-xl);
+}
+
+.roi-chart:hover {
+  border-color: var(--color-border-secondary);
+  box-shadow: var(--shadow-lg);
+}
+
+.roi-chart .no-data-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-base);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.roi-summary {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.roi-value,
+.profit-value {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.roi-label,
+.profit-label {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+
+.roi-number,
+.profit-number {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-family-mono);
+}
+
+.roi-value.positive .roi-number,
+.profit-value.positive .profit-number {
+  color: #10b981;
+}
+
+.roi-value.negative .roi-number,
+.profit-value.negative .profit-number {
+  color: #ef4444;
+}
+
+.chart-controls {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  width: fit-content;
+  flex-shrink: 0;
+}
+
+.time-range-btn {
+  padding: 6px 14px;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.time-range-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+}
+
+.time-range-btn.active {
+  background-color: #667eea;
+  color: white;
+  font-weight: 600;
+}
+
+.time-range-btn:active {
+  transform: scale(0.95);
+}
+
+.chart-container {
+  flex: 1;
+  min-height: 0;
+  height: 550px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .roi-chart {
+    padding: var(--spacing-md);
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .roi-summary {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .roi-number,
+  .profit-number {
+    font-size: 20px;
+  }
+
+  .chart-container {
+    height: 320px;
+  }
+
+  .chart-controls {
+    gap: 4px;
+    padding: 3px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .time-range-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 45px;
+  }
+}
