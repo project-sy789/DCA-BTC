@@ -93,15 +93,18 @@ const ROIChart = ({ purchases, currentBTCPrice }) => {
         label: 'ROI (%)',
         data: filteredData.map(item => item.roi),
         borderColor: function(context) {
+          if (!context.parsed) return '#10b981';
           const value = context.parsed.y;
           return value >= 0 ? '#10b981' : '#ef4444';
         },
         backgroundColor: function(context) {
+          if (!context.parsed) return 'rgba(16, 185, 129, 0.1)';
           const value = context.parsed.y;
           return value >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
         },
         segment: {
           borderColor: function(context) {
+            if (!context.p1 || !context.p1.parsed) return '#10b981';
             const value = context.p1.parsed.y;
             return value >= 0 ? '#10b981' : '#ef4444';
           }
@@ -109,6 +112,7 @@ const ROIChart = ({ purchases, currentBTCPrice }) => {
         tension: 0.4,
         fill: true,
         pointBackgroundColor: function(context) {
+          if (!context.parsed) return '#10b981';
           const value = context.parsed.y;
           return value >= 0 ? '#10b981' : '#ef4444';
         },
@@ -165,6 +169,9 @@ const ROIChart = ({ purchases, currentBTCPrice }) => {
           }
         },
         borderColor: function(context) {
+          if (!context.tooltip || !context.tooltip.dataPoints || !context.tooltip.dataPoints[0]) {
+            return '#10b981';
+          }
           const value = context.tooltip.dataPoints[0].parsed.y;
           return value >= 0 ? '#10b981' : '#ef4444';
         }

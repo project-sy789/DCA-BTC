@@ -50,11 +50,25 @@ function BackupManager({ purchases, currentBTCPrice, onRestore }) {
           return;
         }
 
+        // Validate each purchase
+        const validPurchases = data.purchases.filter(purchase => {
+          return purchase.date && 
+                 typeof purchase.investmentAmount === 'number' &&
+                 typeof purchase.btcPrice === 'number' &&
+                 typeof purchase.btcReceived === 'number';
+        });
+
+        if (validPurchases.length === 0) {
+          alert('ไม่พบข้อมูลที่ถูกต้องในไฟล์');
+          return;
+        }
+
         // Restore data
-        onRestore(data.purchases, data.currentBTCPrice || 0);
-        alert('นำเข้าข้อมูลสำเร็จ!');
+        onRestore(validPurchases, data.currentBTCPrice || 0);
+        alert(`นำเข้าข้อมูลสำเร็จ! (${validPurchases.length} รายการ)`);
         setShowModal(false);
       } catch (error) {
+        console.error('Import error:', error);
         alert('เกิดข้อผิดพลาดในการนำเข้าข้อมูล: ' + error.message);
       }
     };
