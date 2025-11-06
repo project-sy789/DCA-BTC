@@ -1,0 +1,122 @@
+.log-table-container {
+  margin: var(--spacing-xl) 0;
+  padding: var(--spacing-lg);
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+.log-table-container:hover {
+  border-color: var(--color-border-secondary);
+  box-shadow: var(--shadow-md);
+}
+
+.log-table-container h2 {
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-primary);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+}
+
+.log-table-empty {
+  padding: var(--spacing-2xl);
+  text-align: center;
+}
+
+.log-table-empty p {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-secondary);
+  -webkit-overflow-scrolling: touch;
+}
+
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+  table-layout: fixed;
+}
+
+.log-table thead {
+  background-color: var(--color-surface-overlay);
+}
+
+.log-table thead tr {
+  border-bottom: 2px solid var(--color-border-secondary);
+}
+
+.log-table th {
+  padding: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.log-table th:nth-child(1) {
+  text-align: left;
+  width: 20%;
+}
+
+.log-table th:nth-child(2),
+.log-table th:nth-child(3),
+.log-table th:nth-child(4) {
+  text-align: right;
+  width: 22%;
+}
+
+.log-table th:nth-child(5) {
+  text-align: center;
+  width: 14%;
+}
+
+.log-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+  .log-table-container {
+    padding: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+  }
+
+  .log-table-container h2 {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .log-table {
+    min-width: 500px;
+  }
+
+  .log-table th {
+    padding: 0.75rem 0.5rem;
+    font-size: var(--font-size-xs);
+  }
+
+  .log-table-empty {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+
+  .log-table-empty p {
+    font-size: var(--font-size-base);
+  }
+}
+
+@media (max-width: 480px) {
+  .log-table {
+    font-size: var(--font-size-sm);
+  }
+}

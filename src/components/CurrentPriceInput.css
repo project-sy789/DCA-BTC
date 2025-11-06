@@ -1,0 +1,54 @@
+.current-price-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.current-price-input label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.current-price-input input {
+  padding: 0.75rem;
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  transition: all var(--transition-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.current-price-input input:hover {
+  border-color: var(--color-border-hover);
+  background-color: var(--color-bg-tertiary);
+}
+
+.current-price-input input:focus {
+  outline: none;
+  border-color: var(--color-bitcoin);
+  box-shadow: 0 0 0 3px rgba(247, 147, 26, 0.1);
+  background-color: var(--color-bg-tertiary);
+}
+
+.current-price-input input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Remove number input arrows for cleaner look */
+.current-price-input input[type="number"]::-webkit-inner-spin-button,
+.current-price-input input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.current-price-input input[type="number"] {
+  -moz-appearance: textfield;
+}

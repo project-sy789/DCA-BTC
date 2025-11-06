@@ -1,0 +1,133 @@
+.backup-reminder {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  max-width: 400px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 1500;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.reminder-content {
+  padding: 20px;
+  color: white;
+}
+
+.reminder-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.reminder-text strong {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.reminder-text p {
+  font-size: 14px;
+  margin: 0 0 16px 0;
+  opacity: 0.95;
+  line-height: 1.5;
+}
+
+.reminder-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reminder-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-backup-now {
+  background: white;
+  color: #667eea;
+  flex: 1;
+}
+
+.btn-backup-now:hover {
+  background: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+.btn-remind-later {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  flex: 1;
+}
+
+.btn-remind-later:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-dismiss {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 8px 12px;
+}
+
+.btn-dismiss:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+  .backup-reminder {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+
+  .reminder-content {
+    padding: 16px;
+  }
+
+  .reminder-icon {
+    font-size: 28px;
+  }
+
+  .reminder-text strong {
+    font-size: 16px;
+  }
+
+  .reminder-text p {
+    font-size: 13px;
+  }
+
+  .reminder-actions {
+    flex-direction: column;
+  }
+
+  .reminder-actions button {
+    width: 100%;
+  }
+
+  .btn-dismiss {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: auto;
+  }
+}
