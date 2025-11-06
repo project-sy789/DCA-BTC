@@ -38,7 +38,7 @@
 .chart-container {
   flex: 1;
   min-height: 0;
-  height: 450px;
+  height: 550px;
   position: relative;
 }
 

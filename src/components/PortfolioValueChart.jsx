@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import zoomPlugin from 'chartjs-plugin-zoom';
 import PropTypes from 'prop-types';
 import { calculateCumulativeData } from '../utils/chartUtils';
 import './PortfolioValueChart.css';
@@ -22,7 +23,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  zoomPlugin
 );
 
 const PortfolioValueChart = ({ purchases, currentBTCPrice }) => {
@@ -97,7 +99,7 @@ const PortfolioValueChart = ({ purchases, currentBTCPrice }) => {
     ]
   };
 
-  // Chart options with dark mode styling
+  // Chart options with dark mode styling and zoom
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -114,7 +116,7 @@ const PortfolioValueChart = ({ purchases, currentBTCPrice }) => {
       },
       title: {
         display: true,
-        text: 'มูลค่าพอร์ตโฟลิโอ',
+        text: 'มูลค่าพอร์ตโฟลิโอ (เลื่อนเมาส์เพื่อซูม, ลากเพื่อเลื่อน)',
         color: '#e0e0e0',
         font: {
           size: 16,
@@ -131,6 +133,26 @@ const PortfolioValueChart = ({ purchases, currentBTCPrice }) => {
           label: function(context) {
             return `${context.dataset.label}: ฿${context.parsed.y.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
           }
+        }
+      },
+      zoom: {
+        zoom: {
+          wheel: {
+            enabled: true,
+            speed: 0.1
+          },
+          pinch: {
+            enabled: true
+          },
+          mode: 'xy'
+        },
+        pan: {
+          enabled: true,
+          mode: 'xy'
+        },
+        limits: {
+          x: { min: 'original', max: 'original' },
+          y: { min: 'original', max: 'original' }
         }
       }
     },

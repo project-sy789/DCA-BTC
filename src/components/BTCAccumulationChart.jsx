@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import zoomPlugin from 'chartjs-plugin-zoom';
 import PropTypes from 'prop-types';
 import { calculateCumulativeData } from '../utils/chartUtils';
 import './BTCAccumulationChart.css';
@@ -22,7 +23,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  zoomPlugin
 );
 
 const BTCAccumulationChart = ({ purchases, currentBTCPrice }) => {
@@ -89,7 +91,7 @@ const BTCAccumulationChart = ({ purchases, currentBTCPrice }) => {
     ]
   };
 
-  // Chart options with dark mode styling
+  // Chart options with dark mode styling and zoom
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -106,7 +108,7 @@ const BTCAccumulationChart = ({ purchases, currentBTCPrice }) => {
       },
       title: {
         display: true,
-        text: 'การสะสม Bitcoin',
+        text: 'การสะสม Bitcoin (เลื่อนเมาส์เพื่อซูม, ลากเพื่อเลื่อน)',
         color: '#e0e0e0',
         font: {
           size: 16,
@@ -123,6 +125,26 @@ const BTCAccumulationChart = ({ purchases, currentBTCPrice }) => {
           label: function(context) {
             return `${context.dataset.label}: ${context.parsed.y.toFixed(8)} BTC`;
           }
+        }
+      },
+      zoom: {
+        zoom: {
+          wheel: {
+            enabled: true,
+            speed: 0.1
+          },
+          pinch: {
+            enabled: true
+          },
+          mode: 'xy'
+        },
+        pan: {
+          enabled: true,
+          mode: 'xy'
+        },
+        limits: {
+          x: { min: 'original', max: 'original' },
+          y: { min: 'original', max: 'original' }
         }
       }
     },
