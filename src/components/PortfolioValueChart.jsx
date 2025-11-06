@@ -75,6 +75,19 @@ const PortfolioValueChart = ({ purchases, currentBTCPrice, costBasis }) => {
 
   const cumulativeData = filterDataByTimeRange(allData, timeRange);
 
+  // Calculate min and max values for better scale
+  const allValues = cumulativeData.flatMap(item => [
+    item.cumulativeInvestment,
+    item.portfolioValue
+  ]);
+  const minValue = Math.min(...allValues);
+  const maxValue = Math.max(...allValues);
+  
+  // Add 10% padding to min/max for better visualization
+  const padding = (maxValue - minValue) * 0.1;
+  const suggestedMin = Math.max(0, minValue - padding);
+  const suggestedMax = maxValue + padding;
+
   // Prepare chart data with two datasets
   const chartData = {
     labels: cumulativeData.map(item => {
@@ -192,6 +205,8 @@ const PortfolioValueChart = ({ purchases, currentBTCPrice, costBasis }) => {
         }
       },
       y: {
+        suggestedMin: suggestedMin,
+        suggestedMax: suggestedMax,
         ticks: {
           color: '#e0e0e0',
           callback: function(value) {
