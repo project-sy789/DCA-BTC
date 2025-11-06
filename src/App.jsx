@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import LocalStorageService from './services/LocalStorageService'
 import Dashboard from './components/Dashboard'
 import InputSection from './components/InputSection'
@@ -6,6 +6,7 @@ import LogTable from './components/LogTable'
 import ChartsSection from './components/ChartsSection'
 import BackupManager from './components/BackupManager'
 import BackupReminder from './components/BackupReminder'
+import GoalTracker from './components/GoalTracker'
 import './App.css'
 
 function App() {
@@ -76,6 +77,13 @@ function App() {
     setCurrentBTCPrice(restoredPrice)
   }
 
+  /**
+   * Calculate total BTC accumulated
+   */
+  const totalBTC = useMemo(() => {
+    return purchases.reduce((sum, purchase) => sum + purchase.btcReceived, 0)
+  }, [purchases])
+
   return (
     <div className="app">
       <header>
@@ -103,6 +111,7 @@ function App() {
         currentBTCPrice={currentBTCPrice}
         onRestore={handleRestore}
       />
+      <GoalTracker currentBTC={totalBTC} />
       <BackupReminder />
     </div>
   )
