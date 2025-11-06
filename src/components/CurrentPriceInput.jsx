@@ -15,9 +15,44 @@ function CurrentPriceInput({ currentPrice, onPriceChange }) {
   const [autoRefresh, setAutoRefresh] = useState(true)
 
   /**
-   * Fetch BTC price from Bitkub
+   * Auto-refresh price every 30 seconds
    */
-  const fetchPrice = async () => {
+  useEffect(() => {
+    if (!autoRefresh) return
+
+    /**
+     * Fetch BTC price from Bitkub
+     */
+    const fetchPrice = async () => {
+      setIsLoading(true)
+      try {
+        const price = await BitkubService.fetchBTCPrice()
+        setInputValue(price)
+        onPriceChange(price)
+        setLastUpdate(new Date())
+      } catch (error) {
+        console.error('Failed to fetch BTC price:', error)
+        // Don't show alert on auto-refresh to avoid annoying users
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    // Fetch immediately on mount
+    fetchPrice()
+
+    // Set up interval for auto-refresh
+    const interval = setInterval(() => {
+      fetchPrice()
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  }, [autoRefresh, onPriceChange])
+
+  /**
+   * Manual refresh handler
+   */
+  const handleRefresh = async () => {
     setIsLoading(true)
     try {
       const price = await BitkubService.fetchBTCPrice()
@@ -31,23 +66,6 @@ function CurrentPriceInput({ currentPrice, onPriceChange }) {
       setIsLoading(false)
     }
   }
-
-  /**
-   * Auto-refresh price every 30 seconds
-   */
-  useEffect(() => {
-    if (!autoRefresh) return
-
-    // Fetch immediately on mount
-    fetchPrice()
-
-    // Set up interval for auto-refresh
-    const interval = setInterval(() => {
-      fetchPrice()
-    }, 30000) // 30 seconds
-
-    return () => clearInterval(interval)
-  }, [autoRefresh])
 
   /**
    * Handle manual input change with validation
@@ -95,7 +113,7 @@ function CurrentPriceInput({ currentPrice, onPriceChange }) {
         <div className="price-actions">
           <button 
             className="refresh-btn"
-            onClick={fetchPrice}
+            onClick={handleRefresh}
             disabled={isLoading}
             title="รีเฟรชราคา"
           >
