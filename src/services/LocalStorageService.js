@@ -9,6 +9,7 @@ const STORAGE_KEY = 'dca-bitcoin-tracker-data';
 const DEFAULT_DATA = {
   purchases: [],
   currentBTCPrice: 0,
+  alerts: [],
   lastUpdated: null
 };
 
@@ -112,10 +113,24 @@ class LocalStorageService {
       return false;
     }
 
+    // Check if alerts array exists and is an array (optional for backward compatibility)
+    if (data.alerts !== undefined && !Array.isArray(data.alerts)) {
+      return false;
+    }
+
     // Validate each purchase record
     for (const purchase of data.purchases) {
       if (!this.validatePurchase(purchase)) {
         return false;
+      }
+    }
+
+    // Validate each alert record if alerts exist
+    if (data.alerts) {
+      for (const alert of data.alerts) {
+        if (!this.validateAlert(alert)) {
+          return false;
+        }
       }
     }
 
@@ -159,6 +174,132 @@ class LocalStorageService {
     }
 
     return true;
+  }
+
+  /**
+   * Validate individual alert record
+   * @param {Object} alert - The alert record to validate
+   * @returns {boolean} True if alert is valid, false otherwise
+   */
+  static validateAlert(alert) {
+    if (!alert || typeof alert !== 'object') {
+      return false;
+    }
+
+    // Required fields: id, targetPrice, type, triggered, createdAt
+    const requiredFields = ['id', 'targetPrice', 'type', 'triggered', 'createdAt'];
+    
+    for (const field of requiredFields) {
+      if (!(field in alert)) {
+        return false;
+      }
+    }
+
+    // Validate field types
+    if (typeof alert.id !== 'string') {
+      return false;
+    }
+
+    if (typeof alert.targetPrice !== 'number' || alert.targetPrice <= 0) {
+      return false;
+    }
+
+    if (alert.type !== 'above' && alert.type !== 'below') {
+      return false;
+    }
+
+    if (typeof alert.triggered !== 'boolean') {
+      return false;
+    }
+
+    if (typeof alert.createdAt !== 'string') {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Add a new alert
+   * @param {Object} data - Current data object
+   * @param {Object} alert - The alert to add
+   * @returns {Object} Updated data object
+   */
+  static addAlert(data, alert) {
+    // Ensure alerts array exists
+    if (!data.alerts) {
+      data.alerts = [];
+    }
+
+    // Validate alert before adding
+    if (!this.validateAlert(alert)) {
+      console.error('Invalid alert data. Cannot add alert.');
+      return data;
+    }
+
+    // Add alert to array
+    const updatedData = {
+      ...data,
+      alerts: [...data.alerts, alert]
+    };
+
+    return updatedData;
+  }
+
+  /**
+   * Delete an alert by ID
+   * @param {Object} data - Current data object
+   * @param {string} alertId - The ID of the alert to delete
+   * @returns {Object} Updated data object
+   */
+  static deleteAlert(data, alertId) {
+    // Ensure alerts array exists
+    if (!data.alerts) {
+      return data;
+    }
+
+    // Filter out the alert with matching ID
+    const updatedData = {
+      ...data,
+      alerts: data.alerts.filter(alert => alert.id !== alertId)
+    };
+
+    return updatedData;
+  }
+
+  /**
+   * Update an alert's triggered status
+   * @param {Object} data - Current data object
+   * @param {string} alertId - The ID of the alert to update
+   * @param {boolean} triggered - The new triggered status
+   * @returns {Object} Updated data object
+   */
+  static updateAlertTriggered(data, alertId, triggered) {
+    // Ensure alerts array exists
+    if (!data.alerts) {
+      return data;
+    }
+
+    // Update the alert's triggered status
+    const updatedData = {
+      ...data,
+      alerts: data.alerts.map(alert => 
+        alert.id === alertId 
+          ? { ...alert, triggered } 
+          : alert
+      )
+    };
+
+    return updatedData;
+  }
+
+  /**
+   * Get all alerts
+   * @param {Object} data - Current data object
+   * @returns {Array} Array of alerts
+   */
+  static getAlerts(data) {
+    return data.alerts || [];
   }
 
   /**

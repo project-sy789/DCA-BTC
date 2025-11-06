@@ -7,28 +7,34 @@ import ChartsSection from './components/ChartsSection'
 import BackupManager from './components/BackupManager'
 import BackupReminder from './components/BackupReminder'
 import GoalTracker from './components/GoalTracker'
+import DCACalculator from './components/DCACalculator'
+import PriceAlert from './components/PriceAlert'
+import LumpSumComparison from './components/LumpSumComparison'
 import './App.css'
 
 function App() {
   // Main state for purchases array and current BTC price
   const [purchases, setPurchases] = useState([])
   const [currentBTCPrice, setCurrentBTCPrice] = useState(0)
+  const [alerts, setAlerts] = useState([])
 
   // Load data from LocalStorage on component mount
   useEffect(() => {
     const loadedData = LocalStorageService.loadData()
     setPurchases(loadedData.purchases)
     setCurrentBTCPrice(loadedData.currentBTCPrice)
+    setAlerts(loadedData.alerts || [])
   }, [])
 
   // Auto-save to LocalStorage whenever state changes
   useEffect(() => {
     const dataToSave = {
       purchases,
-      currentBTCPrice
+      currentBTCPrice,
+      alerts
     }
     LocalStorageService.saveData(dataToSave)
-  }, [purchases, currentBTCPrice])
+  }, [purchases, currentBTCPrice, alerts])
 
   /**
    * Add a new purchase record
@@ -78,6 +84,37 @@ function App() {
   }
 
   /**
+   * Add a new alert
+   * @param {Object} alert - Alert object
+   */
+  const addAlert = (alert) => {
+    setAlerts(prevAlerts => [...prevAlerts, alert])
+  }
+
+  /**
+   * Delete an alert by ID
+   * @param {string} alertId - ID of the alert to delete
+   */
+  const deleteAlert = (alertId) => {
+    setAlerts(prevAlerts => prevAlerts.filter(alert => alert.id !== alertId))
+  }
+
+  /**
+   * Update an alert's triggered status
+   * @param {string} alertId - ID of the alert to update
+   * @param {boolean} triggered - New triggered status
+   */
+  const updateAlertTriggered = (alertId, triggered) => {
+    setAlerts(prevAlerts => 
+      prevAlerts.map(alert => 
+        alert.id === alertId 
+          ? { ...alert, triggered } 
+          : alert
+      )
+    )
+  }
+
+  /**
    * Calculate total BTC accumulated
    */
   const totalBTC = useMemo(() => {
@@ -95,6 +132,18 @@ function App() {
           currentPrice={currentBTCPrice}
           onPriceChange={updateCurrentPrice}
           onAddPurchase={addPurchase}
+        />
+        <DCACalculator />
+        <PriceAlert
+          currentBTCPrice={currentBTCPrice}
+          alerts={alerts}
+          onAddAlert={addAlert}
+          onDeleteAlert={deleteAlert}
+          onUpdateAlert={updateAlertTriggered}
+        />
+        <LumpSumComparison 
+          purchases={purchases}
+          currentBTCPrice={currentBTCPrice}
         />
         <ChartsSection 
           purchases={purchases}

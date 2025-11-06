@@ -30,6 +30,8 @@
 .stat-content {
   flex: 1;
   text-align: left;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .stat-title {
@@ -42,11 +44,14 @@
 }
 
 .stat-value {
-  font-size: var(--font-size-3xl);
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
   margin: 0;
   line-height: var(--line-height-tight);
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .stat-value.positive {
@@ -74,6 +79,7 @@
   font-weight: var(--font-weight-normal);
   color: var(--color-text-tertiary);
   margin-left: var(--spacing-xs);
+  word-break: break-word;
 }
 
 @media (max-width: 768px) {
@@ -86,7 +92,7 @@
   }
 
   .stat-value {
-    font-size: var(--font-size-2xl);
+    font-size: clamp(1rem, 4vw, 1.5rem);
   }
 
   .stat-title {

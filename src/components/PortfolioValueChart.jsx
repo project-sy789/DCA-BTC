@@ -11,6 +11,7 @@ import {
   Legend
 } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
+import annotationPlugin from 'chartjs-plugin-annotation';
 import PropTypes from 'prop-types';
 import { calculateCumulativeData } from '../utils/chartUtils';
 import './PortfolioValueChart.css';
@@ -24,10 +25,11 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  zoomPlugin
+  zoomPlugin,
+  annotationPlugin
 );
 
-const PortfolioValueChart = ({ purchases, currentBTCPrice }) => {
+const PortfolioValueChart = ({ purchases, currentBTCPrice, costBasis }) => {
   const [timeRange, setTimeRange] = useState('ALL');
 
   // Get cumulative data
@@ -135,6 +137,30 @@ const PortfolioValueChart = ({ purchases, currentBTCPrice }) => {
           }
         }
       },
+      annotation: {
+        annotations: costBasis && costBasis > 0 ? {
+          averagePriceLine: {
+            type: 'line',
+            yMin: costBasis,
+            yMax: costBasis,
+            borderColor: '#f7931a',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            label: {
+              content: `ราคาเฉลี่ย: ฿${costBasis.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              enabled: true,
+              position: 'end',
+              backgroundColor: 'rgba(247, 147, 26, 0.8)',
+              color: '#ffffff',
+              font: {
+                size: 11,
+                weight: 'bold'
+              },
+              padding: 4
+            }
+          }
+        } : {}
+      },
       zoom: {
         zoom: {
           wheel: {
@@ -222,7 +248,8 @@ PortfolioValueChart.propTypes = {
       btcReceived: PropTypes.number.isRequired
     })
   ).isRequired,
-  currentBTCPrice: PropTypes.number.isRequired
+  currentBTCPrice: PropTypes.number.isRequired,
+  costBasis: PropTypes.number
 };
 
 export default PortfolioValueChart;

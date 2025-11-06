@@ -5,6 +5,12 @@ import PortfolioValueChart from './PortfolioValueChart';
 import './ChartsSection.css';
 
 const ChartsSection = ({ purchases, currentBTCPrice }) => {
+  // Calculate cost basis (average buy price)
+  const costBasis = purchases.length > 0
+    ? purchases.reduce((sum, p) => sum + p.investmentAmount, 0) / 
+      purchases.reduce((sum, p) => sum + p.btcReceived, 0)
+    : 0;
+
   return (
     <section className="charts-section">
       <ROIChart 
@@ -17,7 +23,8 @@ const ChartsSection = ({ purchases, currentBTCPrice }) => {
       />
       <PortfolioValueChart 
         purchases={purchases} 
-        currentBTCPrice={currentBTCPrice} 
+        currentBTCPrice={currentBTCPrice}
+        costBasis={costBasis}
       />
     </section>
   );
