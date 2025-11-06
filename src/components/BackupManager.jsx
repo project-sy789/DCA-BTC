@@ -13,11 +13,16 @@ function BackupManager({ purchases, currentBTCPrice, onRestore }) {
    * Export data to JSON file
    */
   const handleExport = () => {
+    // Get goals from localStorage
+    const goalsData = localStorage.getItem('btcGoals');
+    const goals = goalsData ? JSON.parse(goalsData) : [];
+
     const data = {
       purchases,
       currentBTCPrice,
+      goals,
       exportDate: new Date().toISOString(),
-      version: '1.0'
+      version: '1.1'
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -63,10 +68,19 @@ function BackupManager({ purchases, currentBTCPrice, onRestore }) {
           return;
         }
 
-        // Restore data
+        // Restore purchases and price
         onRestore(validPurchases, data.currentBTCPrice || 0);
-        alert(`นำเข้าข้อมูลสำเร็จ! (${validPurchases.length} รายการ)`);
+
+        // Restore goals if available
+        if (data.goals && Array.isArray(data.goals)) {
+          localStorage.setItem('btcGoals', JSON.stringify(data.goals));
+        }
+
+        alert(`นำเข้าข้อมูลสำเร็จ!\n- รายการซื้อ: ${validPurchases.length} รายการ\n- เป้าหมาย: ${data.goals?.length || 0} เป้าหมาย`);
         setShowModal(false);
+        
+        // Reload page to refresh goals
+        window.location.reload();
       } catch (error) {
         console.error('Import error:', error);
         alert('เกิดข้อผิดพลาดในการนำเข้าข้อมูล: ' + error.message);
@@ -108,6 +122,9 @@ function BackupManager({ purchases, currentBTCPrice, onRestore }) {
               <div className="backup-section">
                 <h3>📤 ส่งออกข้อมูล (Export)</h3>
                 <p>ดาวน์โหลดข้อมูลทั้งหมดเป็นไฟล์ JSON</p>
+                <small style={{ display: 'block', marginBottom: '12px', color: 'var(--color-text-tertiary)' }}>
+                  รวม: รายการซื้อ, ราคา BTC, และเป้าหมาย
+                </small>
                 <button className="btn btn-primary" onClick={handleExport}>
                   ดาวน์โหลดข้อมูล
                 </button>
@@ -145,6 +162,7 @@ function BackupManager({ purchases, currentBTCPrice, onRestore }) {
                   <li>สำรองข้อมูลเป็นประจำเพื่อป้องกันข้อมูลหาย</li>
                   <li>เก็บไฟล์สำรองไว้ใน Google Drive หรือ Dropbox</li>
                   <li>ข้อมูลใน LocalStorage อาจหายเมื่อล้างข้อมูลเบราว์เซอร์</li>
+                  <li>ไฟล์สำรองรวมเป้าหมายการสะสม BTC ด้วย</li>
                 </ul>
               </div>
             </div>
