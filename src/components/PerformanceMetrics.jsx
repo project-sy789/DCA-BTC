@@ -90,44 +90,43 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     }
 
     // 3. Calculate Time-Weighted Return (TWR)
-    // TWR measures the compound rate of growth in a portfolio
+    // Simplified TWR based on BTC price performance
     let timeWeightedReturn = 0
-    if (portfolioHistory.length > 1) {
-      const firstDate = portfolioHistory[0].date
-      const lastDate = portfolioHistory[portfolioHistory.length - 1].date
+    if (sortedPurchases.length > 0) {
+      const firstDate = new Date(sortedPurchases[0].date)
+      const lastDate = new Date()
       const daysDiff = (lastDate - firstDate) / (1000 * 60 * 60 * 24)
       
       if (daysDiff > 0) {
-        // Calculate period returns between each purchase
-        let cumulativeReturn = 1
-        for (let i = 1; i < portfolioHistory.length; i++) {
-          const prevValue = portfolioHistory[i - 1].portfolioValue
-          const currentValue = portfolioHistory[i].portfolioValue
-          const cashFlow = portfolioHistory[i].investment - portfolioHistory[i - 1].investment
+        // Use BTC price change as proxy for TWR (since we're tracking BTC only)
+        const firstBTCPrice = sortedPurchases[0].btcPrice
+        const latestBTCPrice = currentBTCPrice
+        
+        if (firstBTCPrice > 0) {
+          const totalPriceReturn = (latestBTCPrice - firstBTCPrice) / firstBTCPrice
           
-          if (prevValue > 0) {
-            // Period return = (Ending Value - Beginning Value - Cash Flow) / Beginning Value
-            const periodReturn = (currentValue - prevValue - cashFlow) / prevValue
-            cumulativeReturn *= (1 + periodReturn)
+          // Annualize the return: (1 + total return)^(365/days) - 1
+          if (totalPriceReturn > -0.99) { // Prevent negative base for power
+            const annualizedReturn = Math.pow(1 + totalPriceReturn, 365 / daysDiff) - 1
+            timeWeightedReturn = annualizedReturn * 100
+            
+            // Cap extreme values
+            if (!isFinite(timeWeightedReturn) || Math.abs(timeWeightedReturn) > 10000) {
+              timeWeightedReturn = totalPriceReturn * 100 // Use simple return
+            }
+          } else {
+            timeWeightedReturn = totalPriceReturn * 100
           }
-        }
-        
-        // Annualize the return
-        const totalReturn = (cumulativeReturn - 1) * 100
-        timeWeightedReturn = (Math.pow(cumulativeReturn, 365 / daysDiff) - 1) * 100
-        
-        // Cap extreme values
-        if (!isFinite(timeWeightedReturn) || Math.abs(timeWeightedReturn) > 10000) {
-          timeWeightedReturn = totalReturn // Use simple total return if annualized is extreme
         }
       }
     }
 
     // 4. Calculate Money-Weighted Return (MWR)
-    // MWR is similar to IRR - considers timing and size of cash flows
+    // MWR considers timing and size of cash flows
     let moneyWeightedReturn = 0
     if (cumulativeInvestment > 0 && sortedPurchases.length > 0) {
       const totalReturn = currentPortfolioValue - cumulativeInvestment
+      const simpleReturn = totalReturn / cumulativeInvestment
       
       // Calculate weighted average holding period
       let weightedDays = 0
@@ -136,15 +135,21 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
         weightedDays += (purchase.investmentAmount / cumulativeInvestment) * daysSincePurchase
       })
 
-      if (weightedDays > 0) {
-        // Simple annualized return
-        const simpleReturn = totalReturn / cumulativeInvestment
-        moneyWeightedReturn = (simpleReturn * (365 / weightedDays)) * 100
-        
-        // Cap extreme values
-        if (!isFinite(moneyWeightedReturn) || Math.abs(moneyWeightedReturn) > 10000) {
-          moneyWeightedReturn = simpleReturn * 100 // Use simple return if annualized is extreme
+      if (weightedDays > 0 && weightedDays < 36500) { // Sanity check: less than 100 years
+        // Annualized return: (1 + simple return)^(365/weighted days) - 1
+        if (simpleReturn > -0.99) { // Prevent negative base
+          const annualizedReturn = Math.pow(1 + simpleReturn, 365 / weightedDays) - 1
+          moneyWeightedReturn = annualizedReturn * 100
+          
+          // Cap extreme values
+          if (!isFinite(moneyWeightedReturn) || Math.abs(moneyWeightedReturn) > 10000) {
+            moneyWeightedReturn = simpleReturn * 100
+          }
+        } else {
+          moneyWeightedReturn = simpleReturn * 100
         }
+      } else {
+        moneyWeightedReturn = simpleReturn * 100
       }
     }
 
