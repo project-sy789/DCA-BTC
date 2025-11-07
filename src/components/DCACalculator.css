@@ -180,6 +180,19 @@
   text-align: right;
 }
 
+.result-value.positive {
+  color: var(--color-success);
+}
+
+.result-value.negative {
+  color: var(--color-error);
+}
+
+.result-item.highlight {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid var(--color-primary);
+}
+
 @media (max-width: 768px) {
   .dca-calculator {
     padding: var(--spacing-md);

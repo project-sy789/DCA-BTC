@@ -9,7 +9,8 @@ function DCACalculator() {
   const [formData, setFormData] = useState({
     monthlyInvestment: '',
     durationMonths: '',
-    expectedBTCPrice: ''
+    averageBTCPrice: '',
+    futureBTCPrice: ''
   })
 
   // State for validation errors
@@ -64,11 +65,18 @@ function DCACalculator() {
       }
     }
 
-    // Validate expected BTC price (required, positive number)
-    if (!formData.expectedBTCPrice) {
-      newErrors.expectedBTCPrice = 'กรุณากรอกราคา Bitcoin ที่คาดหวัง'
-    } else if (parseFloat(formData.expectedBTCPrice) <= 0) {
-      newErrors.expectedBTCPrice = 'ราคาต้องมากกว่า 0'
+    // Validate average BTC price (required, positive number)
+    if (!formData.averageBTCPrice) {
+      newErrors.averageBTCPrice = 'กรุณากรอกราคาเฉลี่ยที่คาดว่าจะซื้อ'
+    } else if (parseFloat(formData.averageBTCPrice) <= 0) {
+      newErrors.averageBTCPrice = 'ราคาต้องมากกว่า 0'
+    }
+
+    // Validate future BTC price (required, positive number)
+    if (!formData.futureBTCPrice) {
+      newErrors.futureBTCPrice = 'กรุณากรอกราคา Bitcoin ในอนาคต'
+    } else if (parseFloat(formData.futureBTCPrice) <= 0) {
+      newErrors.futureBTCPrice = 'ราคาต้องมากกว่า 0'
     }
 
     setErrors(newErrors)
@@ -89,18 +97,40 @@ function DCACalculator() {
     // Parse input values
     const monthlyInvestment = parseFloat(formData.monthlyInvestment)
     const durationMonths = parseInt(formData.durationMonths)
-    const expectedBTCPrice = parseFloat(formData.expectedBTCPrice)
+    const averageBTCPrice = parseFloat(formData.averageBTCPrice)
+    const futureBTCPrice = parseFloat(formData.futureBTCPrice)
 
-    // Calculate projections
+    // Calculate DCA projections
     const totalInvestment = monthlyInvestment * durationMonths
-    const projectedBTC = totalInvestment / expectedBTCPrice
-    const projectedValue = projectedBTC * expectedBTCPrice
+    
+    // BTC accumulated based on average purchase price
+    const projectedBTC = totalInvestment / averageBTCPrice
+    
+    // Portfolio value at future price
+    const projectedValue = projectedBTC * futureBTCPrice
+    
+    // Profit/Loss
+    const profitLoss = projectedValue - totalInvestment
+    const profitLossPercent = (profitLoss / totalInvestment) * 100
+    
+    // Compare with lump sum investment at average price
+    const lumpSumBTC = totalInvestment / averageBTCPrice
+    const lumpSumValue = lumpSumBTC * futureBTCPrice
+    const lumpSumProfit = lumpSumValue - totalInvestment
+    
+    // ROI
+    const roi = profitLossPercent
 
     // Set results
     setResults({
       totalInvestment,
       projectedBTC,
-      projectedValue
+      projectedValue,
+      profitLoss,
+      profitLossPercent,
+      roi,
+      averageBTCPrice,
+      futureBTCPrice
     })
   }
 
@@ -111,7 +141,8 @@ function DCACalculator() {
     setFormData({
       monthlyInvestment: '',
       durationMonths: '',
-      expectedBTCPrice: ''
+      averageBTCPrice: '',
+      futureBTCPrice: ''
     })
     setErrors({})
     setResults(null)
@@ -158,19 +189,36 @@ function DCACalculator() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="expectedBTCPrice">ราคา Bitcoin ที่คาดหวังเฉลี่ย (บาท)</label>
+          <label htmlFor="averageBTCPrice">ราคาเฉลี่ยที่คาดว่าจะซื้อ (บาท)</label>
           <input
-            id="expectedBTCPrice"
+            id="averageBTCPrice"
             type="number"
-            name="expectedBTCPrice"
-            value={formData.expectedBTCPrice}
+            name="averageBTCPrice"
+            value={formData.averageBTCPrice}
             onChange={handleChange}
-            placeholder="0.00"
+            placeholder="3000000.00"
             min="0"
             step="0.01"
           />
-          {errors.expectedBTCPrice && (
-            <span className="error-message">{errors.expectedBTCPrice}</span>
+          {errors.averageBTCPrice && (
+            <span className="error-message">{errors.averageBTCPrice}</span>
+          )}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="futureBTCPrice">ราคา Bitcoin ในอนาคต (บาท)</label>
+          <input
+            id="futureBTCPrice"
+            type="number"
+            name="futureBTCPrice"
+            value={formData.futureBTCPrice}
+            onChange={handleChange}
+            placeholder="4000000.00"
+            min="0"
+            step="0.01"
+          />
+          {errors.futureBTCPrice && (
+            <span className="error-message">{errors.futureBTCPrice}</span>
           )}
         </div>
 
@@ -186,23 +234,47 @@ function DCACalculator() {
 
       {results && (
         <div className="results-card">
-          <h3>ผลการคำนวณ</h3>
+          <h3>ผลการคำนวณ DCA</h3>
+          
           <div className="result-item">
             <span className="result-label">เงินลงทุนทั้งหมด:</span>
             <span className="result-value">
               ฿{results.totalInvestment.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
+          
           <div className="result-item">
             <span className="result-label">จำนวน BTC ที่คาดว่าจะได้:</span>
             <span className="result-value">
               {results.projectedBTC.toFixed(8)} BTC
             </span>
           </div>
+          
           <div className="result-item">
-            <span className="result-label">มูลค่าพอร์ตที่คาดหวัง:</span>
+            <span className="result-label">ราคาเฉลี่ยที่ซื้อ:</span>
+            <span className="result-value">
+              ฿{results.averageBTCPrice.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          
+          <div className="result-item">
+            <span className="result-label">มูลค่าพอร์ตในอนาคต:</span>
             <span className="result-value">
               ฿{results.projectedValue.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          
+          <div className="result-item highlight">
+            <span className="result-label">กำไร/ขาดทุนที่คาดหวัง:</span>
+            <span className={`result-value ${results.profitLoss >= 0 ? 'positive' : 'negative'}`}>
+              {results.profitLoss >= 0 ? '+' : ''}฿{Math.abs(results.profitLoss).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          
+          <div className="result-item highlight">
+            <span className="result-label">ROI (ผลตอบแทน):</span>
+            <span className={`result-value ${results.roi >= 0 ? 'positive' : 'negative'}`}>
+              {results.roi >= 0 ? '+' : ''}{results.roi.toFixed(2)}%
             </span>
           </div>
         </div>
