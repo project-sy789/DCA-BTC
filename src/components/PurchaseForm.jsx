@@ -135,6 +135,9 @@ function PurchaseForm({ onAddPurchase }) {
     // Pass to parent
     onAddPurchase(purchase)
 
+    // Show success message
+    alert('เพิ่มข้อมูลการซื้อสำเร็จ!')
+
     // Reset form
     setFormData({
       date: '',
