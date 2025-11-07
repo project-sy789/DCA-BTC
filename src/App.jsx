@@ -11,6 +11,7 @@ import DCACalculator from './components/DCACalculator'
 import PriceAlert from './components/PriceAlert'
 import LumpSumComparison from './components/LumpSumComparison'
 import PerformanceMetrics from './components/PerformanceMetrics'
+import PurchaseAnalysis from './components/PurchaseAnalysis'
 import './App.css'
 
 function App() {
@@ -147,6 +148,10 @@ function App() {
           currentBTCPrice={currentBTCPrice}
         />
         <PerformanceMetrics 
+          purchases={purchases}
+          currentBTCPrice={currentBTCPrice}
+        />
+        <PurchaseAnalysis 
           purchases={purchases}
           currentBTCPrice={currentBTCPrice}
         />
