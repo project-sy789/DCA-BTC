@@ -92,6 +92,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     // 3. Calculate Time-Weighted Return (TWR)
     // Simplified TWR based on BTC price performance
     let timeWeightedReturn = 0
+    let twrLabel = 'ผลตอบแทนต่อปี'
     if (sortedPurchases.length > 0) {
       const firstDate = new Date(sortedPurchases[0].date)
       const lastDate = new Date()
@@ -105,17 +106,21 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
         if (firstBTCPrice > 0) {
           const totalPriceReturn = (latestBTCPrice - firstBTCPrice) / firstBTCPrice
           
-          // Annualize the return: (1 + total return)^(365/days) - 1
-          if (totalPriceReturn > -0.99) { // Prevent negative base for power
+          // Only annualize if we have at least 30 days of data
+          if (daysDiff >= 30 && totalPriceReturn > -0.99) {
             const annualizedReturn = Math.pow(1 + totalPriceReturn, 365 / daysDiff) - 1
-            timeWeightedReturn = annualizedReturn * 100
             
             // Cap extreme values
-            if (!isFinite(timeWeightedReturn) || Math.abs(timeWeightedReturn) > 10000) {
-              timeWeightedReturn = totalPriceReturn * 100 // Use simple return
+            if (isFinite(annualizedReturn) && Math.abs(annualizedReturn * 100) <= 1000) {
+              timeWeightedReturn = annualizedReturn * 100
+              twrLabel = 'ผลตอบแทนต่อปี (Annualized)'
+            } else {
+              timeWeightedReturn = totalPriceReturn * 100
+              twrLabel = 'ผลตอบแทนรวม (Total Return)'
             }
           } else {
             timeWeightedReturn = totalPriceReturn * 100
+            twrLabel = 'ผลตอบแทนรวม (Total Return)'
           }
         }
       }
@@ -124,6 +129,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     // 4. Calculate Money-Weighted Return (MWR)
     // MWR considers timing and size of cash flows
     let moneyWeightedReturn = 0
+    let mwrLabel = 'ผลตอบแทนต่อปี'
     if (cumulativeInvestment > 0 && sortedPurchases.length > 0) {
       const totalReturn = currentPortfolioValue - cumulativeInvestment
       const simpleReturn = totalReturn / cumulativeInvestment
@@ -135,21 +141,21 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
         weightedDays += (purchase.investmentAmount / cumulativeInvestment) * daysSincePurchase
       })
 
-      if (weightedDays > 0 && weightedDays < 36500) { // Sanity check: less than 100 years
-        // Annualized return: (1 + simple return)^(365/weighted days) - 1
-        if (simpleReturn > -0.99) { // Prevent negative base
-          const annualizedReturn = Math.pow(1 + simpleReturn, 365 / weightedDays) - 1
+      // Only annualize if we have at least 30 days average holding period
+      if (weightedDays >= 30 && weightedDays < 36500 && simpleReturn > -0.99) {
+        const annualizedReturn = Math.pow(1 + simpleReturn, 365 / weightedDays) - 1
+        
+        // Cap extreme values
+        if (isFinite(annualizedReturn) && Math.abs(annualizedReturn * 100) <= 1000) {
           moneyWeightedReturn = annualizedReturn * 100
-          
-          // Cap extreme values
-          if (!isFinite(moneyWeightedReturn) || Math.abs(moneyWeightedReturn) > 10000) {
-            moneyWeightedReturn = simpleReturn * 100
-          }
+          mwrLabel = 'ผลตอบแทนต่อปี (Annualized)'
         } else {
           moneyWeightedReturn = simpleReturn * 100
+          mwrLabel = 'ผลตอบแทนรวม (Total Return)'
         }
       } else {
         moneyWeightedReturn = simpleReturn * 100
+        mwrLabel = 'ผลตอบแทนรวม (Total Return)'
       }
     }
 
@@ -158,6 +164,8 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
       maxDrawdown,
       timeWeightedReturn,
       moneyWeightedReturn,
+      twrLabel,
+      mwrLabel,
       totalInvestment: cumulativeInvestment,
       currentValue: currentPortfolioValue
     }
@@ -229,7 +237,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
             {metrics.timeWeightedReturn >= 0 ? '+' : ''}{metrics.timeWeightedReturn.toFixed(2)}%
           </div>
           <div className="metric-description">
-            ผลตอบแทนต่อปี (ไม่รวมผลกระทบจากการเพิ่มเงิน)
+            {metrics.twrLabel} (ไม่รวมผลกระทบจากการเพิ่มเงิน)
           </div>
           <div className="metric-info">
             วัดประสิทธิภาพของการลงทุนโดยไม่คำนึงถึงเวลาที่เพิ่มเงิน
@@ -246,7 +254,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
             {metrics.moneyWeightedReturn >= 0 ? '+' : ''}{metrics.moneyWeightedReturn.toFixed(2)}%
           </div>
           <div className="metric-description">
-            ผลตอบแทนต่อปี (รวมผลกระทบจากการเพิ่มเงิน)
+            {metrics.mwrLabel} (รวมผลกระทบจากการเพิ่มเงิน)
           </div>
           <div className="metric-info">
             วัดผลตอบแทนจริงที่คุณได้รับจากเงินที่ลงทุนไป
