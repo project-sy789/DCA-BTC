@@ -90,31 +90,61 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     }
 
     // 3. Calculate Time-Weighted Return (TWR)
+    // TWR measures the compound rate of growth in a portfolio
     let timeWeightedReturn = 0
     if (portfolioHistory.length > 1) {
-      const initialValue = portfolioHistory[0].investment
-      const finalValue = currentPortfolioValue
-      const daysDiff = (portfolioHistory[portfolioHistory.length - 1].date - portfolioHistory[0].date) / (1000 * 60 * 60 * 24)
+      const firstDate = portfolioHistory[0].date
+      const lastDate = portfolioHistory[portfolioHistory.length - 1].date
+      const daysDiff = (lastDate - firstDate) / (1000 * 60 * 60 * 24)
       
-      if (initialValue > 0 && daysDiff > 0) {
-        // Annualized TWR
-        timeWeightedReturn = (Math.pow(finalValue / initialValue, 365 / daysDiff) - 1) * 100
+      if (daysDiff > 0) {
+        // Calculate period returns between each purchase
+        let cumulativeReturn = 1
+        for (let i = 1; i < portfolioHistory.length; i++) {
+          const prevValue = portfolioHistory[i - 1].portfolioValue
+          const currentValue = portfolioHistory[i].portfolioValue
+          const cashFlow = portfolioHistory[i].investment - portfolioHistory[i - 1].investment
+          
+          if (prevValue > 0) {
+            // Period return = (Ending Value - Beginning Value - Cash Flow) / Beginning Value
+            const periodReturn = (currentValue - prevValue - cashFlow) / prevValue
+            cumulativeReturn *= (1 + periodReturn)
+          }
+        }
+        
+        // Annualize the return
+        const totalReturn = (cumulativeReturn - 1) * 100
+        timeWeightedReturn = (Math.pow(cumulativeReturn, 365 / daysDiff) - 1) * 100
+        
+        // Cap extreme values
+        if (!isFinite(timeWeightedReturn) || Math.abs(timeWeightedReturn) > 10000) {
+          timeWeightedReturn = totalReturn // Use simple total return if annualized is extreme
+        }
       }
     }
 
-    // 4. Calculate Money-Weighted Return (MWR) using XIRR approximation
-    // Simplified IRR calculation
+    // 4. Calculate Money-Weighted Return (MWR)
+    // MWR is similar to IRR - considers timing and size of cash flows
     let moneyWeightedReturn = 0
-    if (cumulativeInvestment > 0) {
+    if (cumulativeInvestment > 0 && sortedPurchases.length > 0) {
       const totalReturn = currentPortfolioValue - cumulativeInvestment
-      const avgInvestmentPeriod = sortedPurchases.reduce((sum, purchase, index) => {
+      
+      // Calculate weighted average holding period
+      let weightedDays = 0
+      sortedPurchases.forEach(purchase => {
         const daysSincePurchase = (new Date() - new Date(purchase.date)) / (1000 * 60 * 60 * 24)
-        return sum + (purchase.investmentAmount * daysSincePurchase)
-      }, 0) / cumulativeInvestment
+        weightedDays += (purchase.investmentAmount / cumulativeInvestment) * daysSincePurchase
+      })
 
-      if (avgInvestmentPeriod > 0) {
-        // Annualized MWR
-        moneyWeightedReturn = (totalReturn / cumulativeInvestment) * (365 / avgInvestmentPeriod) * 100
+      if (weightedDays > 0) {
+        // Simple annualized return
+        const simpleReturn = totalReturn / cumulativeInvestment
+        moneyWeightedReturn = (simpleReturn * (365 / weightedDays)) * 100
+        
+        // Cap extreme values
+        if (!isFinite(moneyWeightedReturn) || Math.abs(moneyWeightedReturn) > 10000) {
+          moneyWeightedReturn = simpleReturn * 100 // Use simple return if annualized is extreme
+        }
       }
     }
 
