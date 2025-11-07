@@ -10,6 +10,7 @@ import GoalTracker from './components/GoalTracker'
 import DCACalculator from './components/DCACalculator'
 import PriceAlert from './components/PriceAlert'
 import LumpSumComparison from './components/LumpSumComparison'
+import PerformanceMetrics from './components/PerformanceMetrics'
 import './App.css'
 
 function App() {
@@ -142,6 +143,10 @@ function App() {
           onUpdateAlert={updateAlertTriggered}
         />
         <LumpSumComparison 
+          purchases={purchases}
+          currentBTCPrice={currentBTCPrice}
+        />
+        <PerformanceMetrics 
           purchases={purchases}
           currentBTCPrice={currentBTCPrice}
         />
