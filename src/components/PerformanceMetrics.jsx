@@ -48,53 +48,59 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     })
 
     // 1. Calculate Maximum Drawdown
+    // Use BTC price instead of portfolio value to avoid cash flow effects
     let maxDrawdown = 0
-    let peak = portfolioHistory[0].portfolioValue
+    let peak = portfolioHistory[0].btcPrice
     
     portfolioHistory.forEach(point => {
-      if (point.portfolioValue > peak) {
-        peak = point.portfolioValue
+      if (point.btcPrice > peak) {
+        peak = point.btcPrice
       }
-      const drawdown = ((peak - point.portfolioValue) / peak) * 100
+      const drawdown = ((peak - point.btcPrice) / peak) * 100
       if (drawdown > maxDrawdown) {
         maxDrawdown = drawdown
       }
     })
 
     // 2. Calculate Sharpe Ratio
-    // Use BTC price returns instead of portfolio value (to avoid cash flow effects)
-    const priceReturns = []
-    for (let i = 1; i < portfolioHistory.length; i++) {
-      const prevPrice = portfolioHistory[i - 1].btcPrice
-      const currentPrice = portfolioHistory[i].btcPrice
-      if (prevPrice > 0) {
-        const priceReturn = (currentPrice - prevPrice) / prevPrice
-        priceReturns.push(priceReturn)
-      }
-    }
-
+    // Simplified calculation using overall return and volatility
     let sharpeRatio = 0
-    if (priceReturns.length > 1) {
-      // Calculate average return
-      const avgReturn = priceReturns.reduce((sum, r) => sum + r, 0) / priceReturns.length
+    
+    if (sortedPurchases.length > 1) {
+      const firstPrice = sortedPurchases[0].btcPrice
+      const lastPrice = currentBTCPrice
+      const totalDays = (new Date() - new Date(sortedPurchases[0].date)) / (1000 * 60 * 60 * 24)
       
-      // Calculate standard deviation
-      const variance = priceReturns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / priceReturns.length
-      const stdDev = Math.sqrt(variance)
-      
-      // Sharpe Ratio (assuming risk-free rate = 0 for simplicity)
-      // Calculate average days between purchases for proper annualization
-      let totalDays = 0
+      // Calculate price returns between each observation
+      const priceReturns = []
       for (let i = 1; i < portfolioHistory.length; i++) {
-        const daysDiff = (portfolioHistory[i].date - portfolioHistory[i - 1].date) / (1000 * 60 * 60 * 24)
-        totalDays += daysDiff
+        const prevPrice = portfolioHistory[i - 1].btcPrice
+        const currentPrice = portfolioHistory[i].btcPrice
+        if (prevPrice > 0) {
+          const priceReturn = (currentPrice - prevPrice) / prevPrice
+          priceReturns.push(priceReturn)
+        }
       }
-      const avgDaysBetweenPurchases = totalDays / (portfolioHistory.length - 1)
       
-      // Annualize based on actual frequency
-      if (stdDev > 0 && avgDaysBetweenPurchases > 0) {
-        const periodsPerYear = 365 / avgDaysBetweenPurchases
-        sharpeRatio = (avgReturn * periodsPerYear) / (stdDev * Math.sqrt(periodsPerYear))
+      if (priceReturns.length > 0 && totalDays > 0) {
+        // Calculate average return and standard deviation
+        const avgReturn = priceReturns.reduce((sum, r) => sum + r, 0) / priceReturns.length
+        const variance = priceReturns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / priceReturns.length
+        const stdDev = Math.sqrt(variance)
+        
+        // Simple Sharpe Ratio (not annualized for short periods)
+        if (stdDev > 0) {
+          sharpeRatio = avgReturn / stdDev
+          
+          // Only annualize if we have enough data (> 30 days)
+          if (totalDays > 30) {
+            const avgDaysBetween = totalDays / (portfolioHistory.length - 1)
+            if (avgDaysBetween > 0) {
+              const periodsPerYear = 365 / avgDaysBetween
+              sharpeRatio = sharpeRatio * Math.sqrt(periodsPerYear)
+            }
+          }
+        }
       }
     }
 
