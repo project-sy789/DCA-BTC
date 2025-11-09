@@ -62,30 +62,39 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     })
 
     // 2. Calculate Sharpe Ratio
-    // Calculate daily returns
-    const returns = []
+    // Use BTC price returns instead of portfolio value (to avoid cash flow effects)
+    const priceReturns = []
     for (let i = 1; i < portfolioHistory.length; i++) {
-      const prevValue = portfolioHistory[i - 1].portfolioValue
-      const currentValue = portfolioHistory[i].portfolioValue
-      if (prevValue > 0) {
-        const dailyReturn = (currentValue - prevValue) / prevValue
-        returns.push(dailyReturn)
+      const prevPrice = portfolioHistory[i - 1].btcPrice
+      const currentPrice = portfolioHistory[i].btcPrice
+      if (prevPrice > 0) {
+        const priceReturn = (currentPrice - prevPrice) / prevPrice
+        priceReturns.push(priceReturn)
       }
     }
 
     let sharpeRatio = 0
-    if (returns.length > 0) {
+    if (priceReturns.length > 1) {
       // Calculate average return
-      const avgReturn = returns.reduce((sum, r) => sum + r, 0) / returns.length
+      const avgReturn = priceReturns.reduce((sum, r) => sum + r, 0) / priceReturns.length
       
       // Calculate standard deviation
-      const variance = returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / returns.length
+      const variance = priceReturns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / priceReturns.length
       const stdDev = Math.sqrt(variance)
       
       // Sharpe Ratio (assuming risk-free rate = 0 for simplicity)
-      // Annualized: multiply by sqrt(365) for daily data
-      if (stdDev > 0) {
-        sharpeRatio = (avgReturn / stdDev) * Math.sqrt(365)
+      // Calculate average days between purchases for proper annualization
+      let totalDays = 0
+      for (let i = 1; i < portfolioHistory.length; i++) {
+        const daysDiff = (portfolioHistory[i].date - portfolioHistory[i - 1].date) / (1000 * 60 * 60 * 24)
+        totalDays += daysDiff
+      }
+      const avgDaysBetweenPurchases = totalDays / (portfolioHistory.length - 1)
+      
+      // Annualize based on actual frequency
+      if (stdDev > 0 && avgDaysBetweenPurchases > 0) {
+        const periodsPerYear = 365 / avgDaysBetweenPurchases
+        sharpeRatio = (avgReturn * periodsPerYear) / (stdDev * Math.sqrt(periodsPerYear))
       }
     }
 
