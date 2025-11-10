@@ -58,6 +58,33 @@
   position: relative;
 }
 
+.price-display {
+  padding: 0.75rem;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-bitcoin);
+  background-color: var(--color-bg-secondary);
+  border: 2px solid var(--color-border-secondary);
+  border-radius: var(--radius-md);
+  text-align: center;
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+.price-display:hover {
+  border-color: var(--color-bitcoin);
+  background-color: var(--color-bg-tertiary);
+  box-shadow: 0 0 0 3px rgba(247, 147, 26, 0.1);
+}
+
+.price-input-hidden {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
 .current-price-input input {
   padding: 0.75rem;
   font-size: var(--font-size-base);

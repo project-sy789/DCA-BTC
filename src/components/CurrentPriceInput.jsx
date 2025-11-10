@@ -129,6 +129,12 @@ function CurrentPriceInput({ currentPrice, onPriceChange }) {
         </div>
       </div>
       <div className="price-input-wrapper">
+        <div className="price-display">
+          {inputValue ? parseFloat(inputValue).toLocaleString('th-TH', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+          }) : '0.00'}
+        </div>
         <input
           id="current-btc-price"
           type="number"
@@ -138,6 +144,7 @@ function CurrentPriceInput({ currentPrice, onPriceChange }) {
           min="0"
           step="0.01"
           disabled={isLoading}
+          className="price-input-hidden"
         />
         {lastUpdate && (
           <div className="last-update">
