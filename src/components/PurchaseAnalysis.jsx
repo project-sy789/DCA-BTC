@@ -1,13 +1,16 @@
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import './PurchaseAnalysis.css'
 
 /**
- * PurchaseAnalysis component - Shows unrealized gain/loss for each purchase
+ * PurchaseAnalysis component - Shows unrealized gain/loss for each purchase with pagination
  * @param {Array} purchases - Array of purchase objects
  * @param {number} currentBTCPrice - Current Bitcoin price
  */
 function PurchaseAnalysis({ purchases, currentBTCPrice }) {
+  // Pagination state - simple, no useEffect needed
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const analysisData = useMemo(() => {
     if (!purchases || purchases.length === 0) {
       return null
@@ -77,6 +80,21 @@ function PurchaseAnalysis({ purchases, currentBTCPrice }) {
 
   const { purchaseDetails, summary } = analysisData
 
+  // Pagination calculations - no useEffect, just direct calculation
+  const totalPages = Math.ceil(purchaseDetails.length / itemsPerPage)
+  
+  // Auto-adjust currentPage if it exceeds totalPages
+  const safePage = Math.min(currentPage, Math.max(1, totalPages))
+  const startIndex = (safePage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentPurchases = purchaseDetails.slice(startIndex, endIndex)
+
+  // Handler for changing items per page - resets to page 1
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage)
+    setCurrentPage(1) // Reset to page 1 in the same handler
+  }
+
   return (
     <div className="purchase-analysis">
       <h2>วิเคราะห์กำไร/ขาดทุนแต่ละครั้งซื้อ</h2>
@@ -126,6 +144,27 @@ function PurchaseAnalysis({ purchases, currentBTCPrice }) {
         </div>
       </div>
 
+      {/* Table Controls */}
+      <div className="table-controls">
+        <div className="filter-group">
+          <select
+            className="items-per-page"
+            value={itemsPerPage}
+            onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+          >
+            <option value="10">10 รายการ</option>
+            <option value="25">25 รายการ</option>
+            <option value="50">50 รายการ</option>
+            <option value="100">100 รายการ</option>
+            <option value={purchaseDetails.length}>ทั้งหมด ({purchaseDetails.length})</option>
+          </select>
+        </div>
+
+        <div className="results-info">
+          แสดง {startIndex + 1}-{Math.min(endIndex, purchaseDetails.length)} จาก {purchaseDetails.length} รายการ
+        </div>
+      </div>
+
       {/* Purchase Details Table */}
       <div className="purchase-table-container">
         <table className="purchase-table">
@@ -142,7 +181,7 @@ function PurchaseAnalysis({ purchases, currentBTCPrice }) {
             </tr>
           </thead>
           <tbody>
-            {purchaseDetails.map((purchase) => (
+            {currentPurchases.map((purchase) => (
               <tr key={purchase.index} className={purchase.unrealizedGainLoss >= 0 ? 'profit-row' : 'loss-row'}>
                 <td>{purchase.index}</td>
                 <td>{new Date(purchase.date).toLocaleDateString('th-TH', { 
@@ -191,8 +230,8 @@ function PurchaseAnalysis({ purchases, currentBTCPrice }) {
               })}</strong></td>
               <td className={summary.totalUnrealizedGainLoss >= 0 ? 'positive' : 'negative'}>
                 <strong>
-                  {summary.totalUnrealizedGainLoss >= 0 ? '+' : ''}
-                  ฿{Math.abs(summary.totalUnrealizedGainLoss).toLocaleString('th-TH', { 
+                  {summary.totalUnrealizedGainLoss >= 0 ? '+฿' : '-฿'}
+                  {Math.abs(summary.totalUnrealizedGainLoss).toLocaleString('th-TH', { 
                     minimumFractionDigits: 2, 
                     maximumFractionDigits: 2 
                   })}
