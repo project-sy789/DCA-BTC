@@ -14,7 +14,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     }
 
     // Sort purchases by date
-    const sortedPurchases = [...purchases].sort((a, b) => 
+    const sortedPurchases = [...purchases].sort((a, b) =>
       new Date(a.date) - new Date(b.date)
     )
 
@@ -27,7 +27,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
       cumulativeBTC += purchase.btcReceived
       cumulativeInvestment += purchase.investmentAmount
       const portfolioValue = cumulativeBTC * purchase.btcPrice
-      
+
       portfolioHistory.push({
         date: new Date(purchase.date),
         portfolioValue,
@@ -48,95 +48,88 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     })
 
     // 1. Calculate Maximum Drawdown
-    // Use BTC price instead of portfolio value to avoid cash flow effects
+    // Calculate based on portfolio return percentage (peak-to-trough)
     let maxDrawdown = 0
-    let peak = portfolioHistory[0].btcPrice
-    
+    let peakReturn = -Infinity
+
     portfolioHistory.forEach(point => {
-      if (point.btcPrice > peak) {
-        peak = point.btcPrice
+      const returnPct = ((point.portfolioValue - point.investment) / point.investment) * 100
+
+      if (returnPct > peakReturn) {
+        peakReturn = returnPct
       }
-      const drawdown = ((peak - point.btcPrice) / peak) * 100
+
+      const drawdown = peakReturn - returnPct
       if (drawdown > maxDrawdown) {
         maxDrawdown = drawdown
       }
     })
 
     // 2. Calculate Sharpe Ratio
-    // Simplified calculation using overall return and volatility
+    // Calculate using individual purchase returns
     let sharpeRatio = 0
-    
+
     if (sortedPurchases.length > 1) {
-      const firstPrice = sortedPurchases[0].btcPrice
-      const lastPrice = currentBTCPrice
-      const totalDays = (new Date() - new Date(sortedPurchases[0].date)) / (1000 * 60 * 60 * 24)
-      
-      // Calculate price returns between each observation
-      const priceReturns = []
-      for (let i = 1; i < portfolioHistory.length; i++) {
-        const prevPrice = portfolioHistory[i - 1].btcPrice
-        const currentPrice = portfolioHistory[i].btcPrice
-        if (prevPrice > 0) {
-          const priceReturn = (currentPrice - prevPrice) / prevPrice
-          priceReturns.push(priceReturn)
-        }
-      }
-      
-      if (priceReturns.length > 0 && totalDays > 0) {
+      // Calculate individual purchase returns
+      const purchaseReturns = sortedPurchases.map(purchase => {
+        const currentValue = purchase.btcReceived * currentBTCPrice
+        const returnPct = ((currentValue - purchase.investmentAmount) / purchase.investmentAmount) * 100
+        return returnPct
+      })
+
+      if (purchaseReturns.length > 0) {
         // Calculate average return and standard deviation
-        const avgReturn = priceReturns.reduce((sum, r) => sum + r, 0) / priceReturns.length
-        const variance = priceReturns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / priceReturns.length
+        const avgReturn = purchaseReturns.reduce((sum, r) => sum + r, 0) / purchaseReturns.length
+        const variance = purchaseReturns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / purchaseReturns.length
         const stdDev = Math.sqrt(variance)
-        
-        // Simple Sharpe Ratio (not annualized for short periods)
+
+        // Sharpe Ratio (assuming risk-free rate = 0)
         if (stdDev > 0) {
           sharpeRatio = avgReturn / stdDev
-          
-          // Only annualize if we have enough data (> 30 days)
-          if (totalDays > 30) {
-            const avgDaysBetween = totalDays / (portfolioHistory.length - 1)
-            if (avgDaysBetween > 0) {
-              const periodsPerYear = 365 / avgDaysBetween
-              sharpeRatio = sharpeRatio * Math.sqrt(periodsPerYear)
-            }
-          }
         }
       }
     }
 
     // 3. Calculate Time-Weighted Return (TWR)
-    // Simplified TWR based on BTC price performance
+    // Calculate using geometric mean of period returns
     let timeWeightedReturn = 0
-    let twrLabel = 'ผลตอบแทนต่อปี'
+    let twrLabel = 'ผลตอบแทนรวม'
+
     if (sortedPurchases.length > 0) {
       const firstDate = new Date(sortedPurchases[0].date)
       const lastDate = new Date()
       const daysDiff = (lastDate - firstDate) / (1000 * 60 * 60 * 24)
-      
-      if (daysDiff > 0) {
-        // Use BTC price change as proxy for TWR (since we're tracking BTC only)
-        const firstBTCPrice = sortedPurchases[0].btcPrice
-        const latestBTCPrice = currentBTCPrice
-        
-        if (firstBTCPrice > 0) {
-          const totalPriceReturn = (latestBTCPrice - firstBTCPrice) / firstBTCPrice
-          
-          // Only annualize if we have at least 30 days of data
-          if (daysDiff >= 30 && totalPriceReturn > -0.99) {
-            const annualizedReturn = Math.pow(1 + totalPriceReturn, 365 / daysDiff) - 1
-            
-            // Cap extreme values
-            if (isFinite(annualizedReturn) && Math.abs(annualizedReturn * 100) <= 1000) {
-              timeWeightedReturn = annualizedReturn * 100
-              twrLabel = 'ผลตอบแทนต่อปี (Annualized)'
-            } else {
-              timeWeightedReturn = totalPriceReturn * 100
-              twrLabel = 'ผลตอบแทนรวม (Total Return)'
-            }
+
+      if (daysDiff > 0 && portfolioHistory.length > 1) {
+        // Calculate period returns using geometric mean
+        let cumulativeReturn = 1
+
+        for (let i = 1; i < portfolioHistory.length; i++) {
+          const prevPrice = portfolioHistory[i - 1].btcPrice
+          const currentPrice = portfolioHistory[i].btcPrice
+
+          if (prevPrice > 0) {
+            const periodReturn = currentPrice / prevPrice
+            cumulativeReturn *= periodReturn
+          }
+        }
+
+        const totalReturn = (cumulativeReturn - 1) * 100
+
+        // Only annualize if we have at least 30 days
+        if (daysDiff >= 30) {
+          const annualizedReturn = (Math.pow(cumulativeReturn, 365 / daysDiff) - 1) * 100
+
+          if (isFinite(annualizedReturn) && Math.abs(annualizedReturn) <= 1000) {
+            timeWeightedReturn = annualizedReturn
+            twrLabel = 'ผลตอบแทนต่อปี (Annualized)'
           } else {
-            timeWeightedReturn = totalPriceReturn * 100
+            timeWeightedReturn = totalReturn
             twrLabel = 'ผลตอบแทนรวม (Total Return)'
           }
+        } else {
+          timeWeightedReturn = totalReturn
+          twrLabel = 'ผลตอบแทนรวม (Total Return)'
         }
       }
     }
@@ -148,7 +141,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     if (cumulativeInvestment > 0 && sortedPurchases.length > 0) {
       const totalReturn = currentPortfolioValue - cumulativeInvestment
       const simpleReturn = totalReturn / cumulativeInvestment
-      
+
       // Calculate weighted average holding period
       let weightedDays = 0
       sortedPurchases.forEach(purchase => {
@@ -159,7 +152,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
       // Only annualize if we have at least 30 days average holding period
       if (weightedDays >= 30 && weightedDays < 36500 && simpleReturn > -0.99) {
         const annualizedReturn = Math.pow(1 + simpleReturn, 365 / weightedDays) - 1
-        
+
         // Cap extreme values
         if (isFinite(annualizedReturn) && Math.abs(annualizedReturn * 100) <= 1000) {
           moneyWeightedReturn = annualizedReturn * 100
@@ -200,7 +193,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
   return (
     <div className="performance-metrics">
       <h2>ตัวชี้วัดประสิทธิภาพขั้นสูง</h2>
-      
+
       <div className="metrics-grid">
         {/* Sharpe Ratio */}
         <div className="metric-card">
