@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import PropTypes from 'prop-types'
+import { parseBitkubLineMessage, isBitkubLineMessage } from '../utils/bitkubParser'
 import './PurchaseForm.css'
 
 /**
@@ -17,26 +18,31 @@ function PurchaseForm({ onAddPurchase }) {
 
   // State for validation errors
   const [errors, setErrors] = useState({})
-  
+
   // State to track if user manually entered BTC amount
   const [manualBTC, setManualBTC] = useState(false)
+
+  // State for Bitkub LINE import
+  const [pasteText, setPasteText] = useState('')
+  const [showPasteSection, setShowPasteSection] = useState(false)
+  const [pasteMessage, setPasteMessage] = useState({ type: '', text: '' })
 
   /**
    * Handle input changes
    */
   const handleChange = (e) => {
     const { name, value } = e.target
-    
+
     // If user manually changes BTC amount, mark it as manual
     if (name === 'btcReceived') {
       setManualBTC(true)
     }
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
-    
+
     // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -90,11 +96,11 @@ function PurchaseForm({ onAddPurchase }) {
   const calculateBTCReceived = () => {
     const investment = parseFloat(formData.investmentAmount)
     const price = parseFloat(formData.btcPrice)
-    
+
     if (isNaN(investment) || isNaN(price) || price === 0) {
       return 0
     }
-    
+
     return investment / price
   }
 
@@ -149,13 +155,113 @@ function PurchaseForm({ onAddPurchase }) {
     setManualBTC(false)
   }
 
+  /**
+   * Handle paste import from Bitkub LINE
+   */
+  const handlePasteImport = () => {
+    // Clear previous messages
+    setPasteMessage({ type: '', text: '' })
+
+    // Check if text is provided
+    if (!pasteText.trim()) {
+      setPasteMessage({ type: 'error', text: 'กรุณาวางข้อความจาก Bitkub LINE' })
+      return
+    }
+
+    // Check if text looks like Bitkub message
+    if (!isBitkubLineMessage(pasteText)) {
+      setPasteMessage({
+        type: 'error',
+        text: 'รูปแบบข้อความไม่ถูกต้อง กรุณาตรวจสอบว่าคัดลอกข้อความจาก Bitkub LINE ครบถ้วน'
+      })
+      return
+    }
+
+    // Parse the message
+    const parsed = parseBitkubLineMessage(pasteText)
+
+    if (!parsed) {
+      setPasteMessage({
+        type: 'error',
+        text: 'ไม่สามารถแปลงข้อมูลได้ กรุณาตรวจสอบรูปแบบข้อความ'
+      })
+      return
+    }
+
+    // Fill form with parsed data
+    setFormData({
+      date: parsed.date,
+      investmentAmount: parsed.investmentAmount.toString(),
+      btcPrice: parsed.btcPrice.toString(),
+      btcReceived: parsed.btcReceived.toString()
+    })
+
+    // Mark as manual BTC entry to prevent auto-calculation override
+    setManualBTC(true)
+
+    // Show success message
+    setPasteMessage({
+      type: 'success',
+      text: '✅ นำเข้าข้อมูลสำเร็จ! กรุณาตรวจสอบข้อมูลก่อนบันทึก'
+    })
+
+    // Clear paste text
+    setPasteText('')
+
+    // Optionally hide paste section after successful import
+    setTimeout(() => {
+      setShowPasteSection(false)
+    }, 2000)
+  }
+
   // Calculate suggested BTC amount
   const suggestedBTC = calculateBTCReceived()
 
   return (
     <form className="purchase-form" onSubmit={handleSubmit}>
       <h3>เพิ่มข้อมูลการซื้อ</h3>
-      
+
+      {/* Quick Import Section */}
+      <div className="quick-import-section">
+        <button
+          type="button"
+          className="toggle-paste-button"
+          onClick={() => setShowPasteSection(!showPasteSection)}
+        >
+          {showPasteSection ? '📝 ซ่อนการนำเข้าด่วน' : '⚡ นำเข้าด่วนจาก Bitkub LINE'}
+        </button>
+
+        {showPasteSection && (
+          <div className="paste-import-container">
+            <label htmlFor="pasteText">วางข้อความจาก Bitkub LINE</label>
+            <textarea
+              id="pasteText"
+              className="paste-textarea"
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder={`ตัวอย่าง:
+🤗🎉 You Spent : 108 THB
+Price : 2716645.94 THB/BTC
+You Received : 0.00003975 BTC
+Time : 2025-12-18 07:46:51`}
+              rows={6}
+            />
+            <button
+              type="button"
+              className="parse-button"
+              onClick={handlePasteImport}
+            >
+              🚀 นำเข้าข้อมูล
+            </button>
+            {pasteMessage.text && (
+              <div className={`paste-message paste-message-${pasteMessage.type}`}>
+                {pasteMessage.text}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="form-group">
         <label htmlFor="date">วันที่</label>
         <input
