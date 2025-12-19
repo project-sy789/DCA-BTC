@@ -128,11 +128,13 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
         const priceReturn = (currentBTCPrice - firstBTCPrice) / firstBTCPrice
         const totalReturn = priceReturn * 100
 
-        // Annualize if holding period >= 30 days
-        if (daysDiff >= 30) {
+        // Only annualize if:
+        // 1. Holding period >= 90 days (more reliable annualization)
+        // 2. Return is not too negative (avoid extreme annualized losses)
+        if (daysDiff >= 90 && priceReturn > -0.5) {
           const annualizedReturn = (Math.pow(1 + priceReturn, 365 / daysDiff) - 1) * 100
 
-          if (isFinite(annualizedReturn) && Math.abs(annualizedReturn) <= 1000) {
+          if (isFinite(annualizedReturn) && Math.abs(annualizedReturn) <= 100) {
             timeWeightedReturn = annualizedReturn
             twrLabel = 'ผลตอบแทนต่อปี (Annualized)'
           } else {
