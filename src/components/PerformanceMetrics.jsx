@@ -18,7 +18,12 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
       new Date(a.date) - new Date(b.date)
     )
 
-    // Calculate portfolio values at each purchase date
+    // Calculate total investment and current value
+    const totalInvestment = sortedPurchases.reduce((sum, p) => sum + p.investmentAmount, 0)
+    const totalBTC = sortedPurchases.reduce((sum, p) => sum + p.btcReceived, 0)
+    const currentPortfolioValue = totalBTC * currentBTCPrice
+
+    // Build portfolio history with cumulative values
     const portfolioHistory = []
     let cumulativeBTC = 0
     let cumulativeInvestment = 0
@@ -26,19 +31,17 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     sortedPurchases.forEach(purchase => {
       cumulativeBTC += purchase.btcReceived
       cumulativeInvestment += purchase.investmentAmount
-      const portfolioValue = cumulativeBTC * purchase.btcPrice
 
       portfolioHistory.push({
         date: new Date(purchase.date),
-        portfolioValue,
+        portfolioValue: cumulativeBTC * purchase.btcPrice,
         investment: cumulativeInvestment,
         btcPrice: purchase.btcPrice,
         cumulativeBTC
       })
     })
 
-    // Add current value
-    const currentPortfolioValue = cumulativeBTC * currentBTCPrice
+    // Add current state
     portfolioHistory.push({
       date: new Date(),
       portfolioValue: currentPortfolioValue,
@@ -47,43 +50,53 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
       cumulativeBTC
     })
 
-    // 1. Calculate Maximum Drawdown
-    // Calculate based on portfolio return percentage (peak-to-trough)
+    // 1. Calculate Maximum Drawdown (from portfolio value peaks)
     let maxDrawdown = 0
-    let peakReturn = -Infinity
+    let peakValue = 0
 
     portfolioHistory.forEach(point => {
-      const returnPct = ((point.portfolioValue - point.investment) / point.investment) * 100
-
-      if (returnPct > peakReturn) {
-        peakReturn = returnPct
+      if (point.portfolioValue > peakValue) {
+        peakValue = point.portfolioValue
       }
 
-      const drawdown = peakReturn - returnPct
-      if (drawdown > maxDrawdown) {
-        maxDrawdown = drawdown
+      if (peakValue > 0) {
+        const drawdown = ((peakValue - point.portfolioValue) / peakValue) * 100
+        if (drawdown > maxDrawdown) {
+          maxDrawdown = drawdown
+        }
       }
     })
 
-    // 2. Calculate Sharpe Ratio
-    // Calculate using individual purchase returns
+    // 2. Calculate Sharpe Ratio (using daily returns approach)
     let sharpeRatio = 0
 
-    if (sortedPurchases.length > 1) {
-      // Calculate individual purchase returns
-      const purchaseReturns = sortedPurchases.map(purchase => {
-        const currentValue = purchase.btcReceived * currentBTCPrice
-        const returnPct = ((currentValue - purchase.investmentAmount) / purchase.investmentAmount) * 100
-        return returnPct
-      })
+    if (portfolioHistory.length >= 2) {
+      // Calculate period returns
+      const returns = []
 
-      if (purchaseReturns.length > 0) {
-        // Calculate average return and standard deviation
-        const avgReturn = purchaseReturns.reduce((sum, r) => sum + r, 0) / purchaseReturns.length
-        const variance = purchaseReturns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / purchaseReturns.length
+      for (let i = 1; i < portfolioHistory.length; i++) {
+        const prevValue = portfolioHistory[i - 1].portfolioValue
+        const prevInvestment = portfolioHistory[i - 1].investment
+        const currValue = portfolioHistory[i].portfolioValue
+        const currInvestment = portfolioHistory[i].investment
+
+        // Calculate return accounting for new cash flows
+        if (prevValue > 0) {
+          const cashFlow = currInvestment - prevInvestment
+          const adjustedPrevValue = prevValue + cashFlow
+
+          if (adjustedPrevValue > 0) {
+            const periodReturn = ((currValue - adjustedPrevValue) / adjustedPrevValue) * 100
+            returns.push(periodReturn)
+          }
+        }
+      }
+
+      if (returns.length > 1) {
+        const avgReturn = returns.reduce((sum, r) => sum + r, 0) / returns.length
+        const variance = returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / returns.length
         const stdDev = Math.sqrt(variance)
 
-        // Sharpe Ratio (assuming risk-free rate = 0)
         if (stdDev > 0) {
           sharpeRatio = avgReturn / stdDev
         }
@@ -91,7 +104,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     }
 
     // 3. Calculate Time-Weighted Return (TWR)
-    // Calculate using geometric mean of period returns
+    // TWR eliminates the effect of cash flows by calculating geometric mean of sub-period returns
     let timeWeightedReturn = 0
     let twrLabel = 'ผลตอบแทนรวม'
 
@@ -100,23 +113,30 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
       const lastDate = new Date()
       const daysDiff = (lastDate - firstDate) / (1000 * 60 * 60 * 24)
 
-      if (daysDiff > 0 && portfolioHistory.length > 1) {
-        // Calculate period returns using geometric mean
+      if (daysDiff > 0 && portfolioHistory.length >= 2) {
         let cumulativeReturn = 1
 
         for (let i = 1; i < portfolioHistory.length; i++) {
-          const prevPrice = portfolioHistory[i - 1].btcPrice
-          const currentPrice = portfolioHistory[i].btcPrice
+          const prevValue = portfolioHistory[i - 1].portfolioValue
+          const prevInvestment = portfolioHistory[i - 1].investment
+          const currValue = portfolioHistory[i].portfolioValue
+          const currInvestment = portfolioHistory[i].investment
 
-          if (prevPrice > 0) {
-            const periodReturn = currentPrice / prevPrice
-            cumulativeReturn *= periodReturn
+          // Calculate sub-period return
+          if (prevValue > 0) {
+            const cashFlow = currInvestment - prevInvestment
+            const adjustedPrevValue = prevValue + cashFlow
+
+            if (adjustedPrevValue > 0) {
+              const subPeriodReturn = currValue / adjustedPrevValue
+              cumulativeReturn *= subPeriodReturn
+            }
           }
         }
 
         const totalReturn = (cumulativeReturn - 1) * 100
 
-        // Only annualize if we have at least 30 days
+        // Annualize if holding period >= 30 days
         if (daysDiff >= 30) {
           const annualizedReturn = (Math.pow(cumulativeReturn, 365 / daysDiff) - 1) * 100
 
@@ -134,35 +154,72 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
       }
     }
 
-    // 4. Calculate Money-Weighted Return (MWR)
-    // MWR considers timing and size of cash flows
+    // 4. Calculate Money-Weighted Return (MWR) using IRR approximation
+    // MWR = IRR that considers timing and size of cash flows
     let moneyWeightedReturn = 0
     let mwrLabel = 'ผลตอบแทนต่อปี'
-    if (cumulativeInvestment > 0 && sortedPurchases.length > 0) {
-      const totalReturn = currentPortfolioValue - cumulativeInvestment
-      const simpleReturn = totalReturn / cumulativeInvestment
 
-      // Calculate weighted average holding period
+    if (totalInvestment > 0 && sortedPurchases.length > 0) {
+      const now = new Date()
+
+      // Simple IRR approximation using Newton-Raphson method
+      const calculateNPV = (rate) => {
+        let npv = 0
+
+        sortedPurchases.forEach(purchase => {
+          const daysSince = (now - new Date(purchase.date)) / (1000 * 60 * 60 * 24)
+          const yearsSince = daysSince / 365
+          npv -= purchase.investmentAmount / Math.pow(1 + rate, yearsSince)
+        })
+
+        npv += currentPortfolioValue
+        return npv
+      }
+
+      // Newton-Raphson iteration to find IRR
+      let irr = 0.1 // Initial guess: 10%
+      const maxIterations = 100
+      const tolerance = 0.0001
+
+      for (let i = 0; i < maxIterations; i++) {
+        const npv = calculateNPV(irr)
+
+        if (Math.abs(npv) < tolerance) {
+          break
+        }
+
+        // Calculate derivative (slope)
+        const delta = 0.0001
+        const npvPlus = calculateNPV(irr + delta)
+        const derivative = (npvPlus - npv) / delta
+
+        if (Math.abs(derivative) < tolerance) {
+          break
+        }
+
+        // Update IRR
+        irr = irr - npv / derivative
+
+        // Prevent extreme values
+        if (irr < -0.99) irr = -0.99
+        if (irr > 10) irr = 10
+      }
+
+      // Calculate average holding period for labeling
       let weightedDays = 0
       sortedPurchases.forEach(purchase => {
-        const daysSincePurchase = (new Date() - new Date(purchase.date)) / (1000 * 60 * 60 * 24)
-        weightedDays += (purchase.investmentAmount / cumulativeInvestment) * daysSincePurchase
+        const daysSince = (now - new Date(purchase.date)) / (1000 * 60 * 60 * 24)
+        weightedDays += (purchase.investmentAmount / totalInvestment) * daysSince
       })
 
-      // Only annualize if we have at least 30 days average holding period
-      if (weightedDays >= 30 && weightedDays < 36500 && simpleReturn > -0.99) {
-        const annualizedReturn = Math.pow(1 + simpleReturn, 365 / weightedDays) - 1
-
-        // Cap extreme values
-        if (isFinite(annualizedReturn) && Math.abs(annualizedReturn * 100) <= 1000) {
-          moneyWeightedReturn = annualizedReturn * 100
-          mwrLabel = 'ผลตอบแทนต่อปี (Annualized)'
-        } else {
-          moneyWeightedReturn = simpleReturn * 100
-          mwrLabel = 'ผลตอบแทนรวม (Total Return)'
-        }
+      // Determine if we should show annualized or total return
+      if (weightedDays >= 30 && isFinite(irr) && Math.abs(irr * 100) <= 1000) {
+        moneyWeightedReturn = irr * 100
+        mwrLabel = 'ผลตอบแทนต่อปี (Annualized IRR)'
       } else {
-        moneyWeightedReturn = simpleReturn * 100
+        // Fallback to simple return
+        const simpleReturn = ((currentPortfolioValue - totalInvestment) / totalInvestment) * 100
+        moneyWeightedReturn = simpleReturn
         mwrLabel = 'ผลตอบแทนรวม (Total Return)'
       }
     }
@@ -174,7 +231,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
       moneyWeightedReturn,
       twrLabel,
       mwrLabel,
-      totalInvestment: cumulativeInvestment,
+      totalInvestment,
       currentValue: currentPortfolioValue
     }
   }, [purchases, currentBTCPrice])
