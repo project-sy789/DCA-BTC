@@ -64,7 +64,7 @@ function LogTable({ purchases, onDeletePurchase, onUpdatePurchase }) {
       })
     }
 
-    // Sort by date (newest first)
+    // Sort by date (newest first) - Latest purchases appear at the top
     return filtered.sort((a, b) => new Date(b.date) - new Date(a.date))
   }, [purchases, dateFilter, searchTerm])
 
@@ -156,13 +156,13 @@ function LogTable({ purchases, onDeletePurchase, onUpdatePurchase }) {
               <tbody>
                 {currentPurchases.map((purchase, index) => {
                   // Find original index in unsorted array for deletion
-                  const originalIndex = purchases.findIndex(p => 
-                    p.date === purchase.date && 
+                  const originalIndex = purchases.findIndex(p =>
+                    p.date === purchase.date &&
                     p.investmentAmount === purchase.investmentAmount &&
                     p.btcPrice === purchase.btcPrice &&
                     p.btcReceived === purchase.btcReceived
                   )
-                  
+
                   return (
                     <LogTableRow
                       key={`${purchase.date}-${index}`}
