@@ -32,6 +32,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
       cumulativeBTC += purchase.btcReceived
       cumulativeInvestment += purchase.investmentAmount
 
+      // Portfolio value at this date = total BTC × BTC price at this date
       portfolioHistory.push({
         date: new Date(purchase.date),
         portfolioValue: cumulativeBTC * purchase.btcPrice,
@@ -50,20 +51,26 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
       cumulativeBTC
     })
 
-    // 1. Calculate Maximum Drawdown (from portfolio value peaks)
+    // 1. Calculate Maximum Drawdown (from portfolio return percentage)
+    // Drawdown measures the peak-to-trough decline in portfolio return %
     let maxDrawdown = 0
-    let peakValue = portfolioHistory.length > 0 ? portfolioHistory[0].portfolioValue : 0
+    let peakReturnPct = -Infinity
 
     portfolioHistory.forEach(point => {
-      if (point.portfolioValue > peakValue) {
-        peakValue = point.portfolioValue
+      // Calculate return percentage at this point
+      const returnPct = point.investment > 0
+        ? ((point.portfolioValue - point.investment) / point.investment) * 100
+        : 0
+
+      // Track peak return
+      if (returnPct > peakReturnPct) {
+        peakReturnPct = returnPct
       }
 
-      if (peakValue > 0) {
-        const drawdown = ((peakValue - point.portfolioValue) / peakValue) * 100
-        if (drawdown > maxDrawdown) {
-          maxDrawdown = drawdown
-        }
+      // Calculate drawdown from peak
+      const drawdown = peakReturnPct - returnPct
+      if (drawdown > maxDrawdown) {
+        maxDrawdown = drawdown
       }
     })
 
