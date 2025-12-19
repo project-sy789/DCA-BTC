@@ -52,7 +52,7 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
 
     // 1. Calculate Maximum Drawdown (from portfolio value peaks)
     let maxDrawdown = 0
-    let peakValue = 0
+    let peakValue = portfolioHistory.length > 0 ? portfolioHistory[0].portfolioValue : 0
 
     portfolioHistory.forEach(point => {
       if (point.portfolioValue > peakValue) {
@@ -104,7 +104,8 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
     }
 
     // 3. Calculate Time-Weighted Return (TWR)
-    // TWR eliminates the effect of cash flows by calculating geometric mean of sub-period returns
+    // TWR measures the compound rate of growth based on BTC price changes
+    // It eliminates the effect of cash flows timing
     let timeWeightedReturn = 0
     let twrLabel = 'ผลตอบแทนรวม'
 
@@ -113,32 +114,16 @@ function PerformanceMetrics({ purchases, currentBTCPrice }) {
       const lastDate = new Date()
       const daysDiff = (lastDate - firstDate) / (1000 * 60 * 60 * 24)
 
-      if (daysDiff > 0 && portfolioHistory.length >= 2) {
-        let cumulativeReturn = 1
+      // Calculate TWR based on BTC price change (not portfolio value)
+      const firstBTCPrice = sortedPurchases[0].btcPrice
 
-        for (let i = 1; i < portfolioHistory.length; i++) {
-          const prevValue = portfolioHistory[i - 1].portfolioValue
-          const prevInvestment = portfolioHistory[i - 1].investment
-          const currValue = portfolioHistory[i].portfolioValue
-          const currInvestment = portfolioHistory[i].investment
-
-          // Calculate sub-period return
-          if (prevValue > 0) {
-            const cashFlow = currInvestment - prevInvestment
-            const adjustedPrevValue = prevValue + cashFlow
-
-            if (adjustedPrevValue > 0) {
-              const subPeriodReturn = currValue / adjustedPrevValue
-              cumulativeReturn *= subPeriodReturn
-            }
-          }
-        }
-
-        const totalReturn = (cumulativeReturn - 1) * 100
+      if (firstBTCPrice > 0 && daysDiff > 0) {
+        const priceReturn = (currentBTCPrice - firstBTCPrice) / firstBTCPrice
+        const totalReturn = priceReturn * 100
 
         // Annualize if holding period >= 30 days
         if (daysDiff >= 30) {
-          const annualizedReturn = (Math.pow(cumulativeReturn, 365 / daysDiff) - 1) * 100
+          const annualizedReturn = (Math.pow(1 + priceReturn, 365 / daysDiff) - 1) * 100
 
           if (isFinite(annualizedReturn) && Math.abs(annualizedReturn) <= 1000) {
             timeWeightedReturn = annualizedReturn
