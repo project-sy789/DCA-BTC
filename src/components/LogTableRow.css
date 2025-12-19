@@ -1,0 +1,168 @@
+.log-table-row {
+  border-bottom: 1px solid var(--color-border-primary);
+  transition: all var(--transition-base);
+}
+
+.log-table-row:hover {
+  background-color: var(--color-surface-overlay);
+}
+
+.log-table-row td {
+  padding: var(--spacing-md);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+}
+
+.date-cell {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  text-align: left;
+  width: 20%;
+  white-space: nowrap;
+}
+
+.amount-cell,
+.price-cell,
+.btc-cell {
+  font-family: var(--font-family-mono);
+  text-align: right;
+  font-weight: var(--font-weight-medium);
+  width: 22%;
+  white-space: nowrap;
+}
+
+.btc-cell {
+  color: var(--color-bitcoin);
+  font-weight: var(--font-weight-semibold);
+}
+
+.actions-cell {
+  text-align: center;
+  width: 14%;
+}
+
+.edit-button,
+.delete-button,
+.save-button,
+.cancel-button {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-base);
+  opacity: 0.6;
+  color: var(--color-text-secondary);
+  margin: 0 2px;
+}
+
+.edit-button:hover {
+  opacity: 1;
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+  transform: scale(1.1);
+}
+
+.delete-button:hover {
+  opacity: 1;
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+  transform: scale(1.1);
+}
+
+.save-button {
+  color: #10b981;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.save-button:hover {
+  opacity: 1;
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  transform: scale(1.1);
+}
+
+.cancel-button {
+  color: #ef4444;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.cancel-button:hover {
+  opacity: 1;
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  transform: scale(1.1);
+}
+
+.edit-button:active,
+.delete-button:active,
+.save-button:active,
+.cancel-button:active {
+  transform: scale(0.95);
+}
+
+.edit-button:focus,
+.delete-button:focus {
+  outline: 2px solid var(--color-border-secondary);
+  outline-offset: 2px;
+}
+
+.save-button:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+.cancel-button:focus {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
+.log-table-row.editing {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.edit-input {
+  width: 100%;
+  padding: 6px 8px;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-mono);
+  transition: all var(--transition-base);
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.edit-input[type="date"] {
+  font-family: inherit;
+}
+
+@media (max-width: 768px) {
+  .log-table-row td {
+    padding: 0.75rem 0.5rem;
+    font-size: var(--font-size-sm);
+  }
+
+  .edit-button,
+  .delete-button,
+  .save-button,
+  .cancel-button {
+    font-size: 1rem;
+    padding: var(--spacing-xs);
+    margin: 0 1px;
+  }
+
+  .edit-input {
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+}

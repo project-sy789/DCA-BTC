@@ -1,0 +1,101 @@
+.stat-card {
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  transition: all var(--transition-slow);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-card:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-secondary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  transition: transform var(--transition-base);
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.1);
+}
+
+.stat-content {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.stat-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-sm) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: var(--line-height-tight);
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.stat-value.positive {
+  color: #10b981;
+  text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.stat-value.negative {
+  color: #ef4444;
+  text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+.stat-card:has(.stat-value.positive) {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, var(--color-surface-overlay) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.stat-card:has(.stat-value.negative) {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, var(--color-surface-overlay) 0%, rgba(239, 68, 68, 0.05) 100%);
+}
+
+.stat-unit {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-tertiary);
+  margin-left: var(--spacing-xs);
+  word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .stat-card {
+    padding: var(--spacing-md);
+  }
+
+  .stat-icon {
+    font-size: 2rem;
+  }
+
+  .stat-value {
+    font-size: clamp(1rem, 4vw, 1.5rem);
+  }
+
+  .stat-title {
+    font-size: var(--font-size-xs);
+  }
+}
