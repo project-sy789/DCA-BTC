@@ -64,8 +64,10 @@ function LogTable({ purchases, onDeletePurchase, onUpdatePurchase }) {
       })
     }
 
-    // Sort by date (newest first) - Latest purchases appear at the top
-    return filtered.sort((a, b) => new Date(b.date) - new Date(a.date))
+    // Sort by date - Newest first (reverse chronological order)
+    const sorted = filtered.sort((a, b) => new Date(a.date) - new Date(b.date)).reverse()
+    console.log('Sorted purchases (newest first):', sorted.map(p => p.date))
+    return sorted
   }, [purchases, dateFilter, searchTerm])
 
   // Pagination calculations
