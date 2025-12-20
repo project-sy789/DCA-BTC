@@ -39,7 +39,7 @@ function PurchaseAnalysis({ purchases, currentBTCPrice }) {
     })
 
     // Sort by unrealized gain/loss (best to worst)
-    const sortedByPerformance = [...purchaseDetails].sort((a, b) => 
+    const sortedByPerformance = [...purchaseDetails].sort((a, b) =>
       b.unrealizedGainLossPercent - a.unrealizedGainLossPercent
     )
 
@@ -80,14 +80,17 @@ function PurchaseAnalysis({ purchases, currentBTCPrice }) {
 
   const { purchaseDetails, summary } = analysisData
 
+  // Sort by date (newest first) for table display
+  const sortedByDate = [...purchaseDetails].sort((a, b) => new Date(b.date) - new Date(a.date))
+
   // Pagination calculations - no useEffect, just direct calculation
-  const totalPages = Math.ceil(purchaseDetails.length / itemsPerPage)
-  
+  const totalPages = Math.ceil(sortedByDate.length / itemsPerPage)
+
   // Auto-adjust currentPage if it exceeds totalPages
   const safePage = Math.min(currentPage, Math.max(1, totalPages))
   const startIndex = (safePage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
-  const currentPurchases = purchaseDetails.slice(startIndex, endIndex)
+  const currentPurchases = sortedByDate.slice(startIndex, endIndex)
 
   // Handler for changing items per page - resets to page 1
   const handleItemsPerPageChange = (newItemsPerPage) => {
@@ -184,29 +187,29 @@ function PurchaseAnalysis({ purchases, currentBTCPrice }) {
             {currentPurchases.map((purchase) => (
               <tr key={purchase.index} className={purchase.unrealizedGainLoss >= 0 ? 'profit-row' : 'loss-row'}>
                 <td>{purchase.index}</td>
-                <td>{new Date(purchase.date).toLocaleDateString('th-TH', { 
-                  year: 'numeric', 
-                  month: 'short', 
-                  day: 'numeric' 
+                <td>{new Date(purchase.date).toLocaleDateString('th-TH', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
                 })}</td>
-                <td>฿{purchase.investmentAmount.toLocaleString('th-TH', { 
-                  minimumFractionDigits: 2, 
-                  maximumFractionDigits: 2 
+                <td>฿{purchase.investmentAmount.toLocaleString('th-TH', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
                 })}</td>
-                <td>฿{purchase.btcPrice.toLocaleString('th-TH', { 
-                  minimumFractionDigits: 2, 
-                  maximumFractionDigits: 2 
+                <td>฿{purchase.btcPrice.toLocaleString('th-TH', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
                 })}</td>
                 <td>{purchase.btcReceived.toFixed(8)}</td>
-                <td>฿{purchase.currentValue.toLocaleString('th-TH', { 
-                  minimumFractionDigits: 2, 
-                  maximumFractionDigits: 2 
+                <td>฿{purchase.currentValue.toLocaleString('th-TH', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
                 })}</td>
                 <td className={purchase.unrealizedGainLoss >= 0 ? 'positive' : 'negative'}>
                   {purchase.unrealizedGainLoss >= 0 ? '+' : ''}
-                  ฿{Math.abs(purchase.unrealizedGainLoss).toLocaleString('th-TH', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
+                  ฿{Math.abs(purchase.unrealizedGainLoss).toLocaleString('th-TH', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
                   })}
                 </td>
                 <td className={purchase.unrealizedGainLossPercent >= 0 ? 'positive' : 'negative'}>
@@ -219,21 +222,21 @@ function PurchaseAnalysis({ purchases, currentBTCPrice }) {
           <tfoot>
             <tr className="total-row">
               <td colSpan="2"><strong>รวม</strong></td>
-              <td><strong>฿{summary.totalInvestment.toLocaleString('th-TH', { 
-                minimumFractionDigits: 2, 
-                maximumFractionDigits: 2 
+              <td><strong>฿{summary.totalInvestment.toLocaleString('th-TH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
               })}</strong></td>
               <td colSpan="2"></td>
-              <td><strong>฿{summary.totalCurrentValue.toLocaleString('th-TH', { 
-                minimumFractionDigits: 2, 
-                maximumFractionDigits: 2 
+              <td><strong>฿{summary.totalCurrentValue.toLocaleString('th-TH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
               })}</strong></td>
               <td className={summary.totalUnrealizedGainLoss >= 0 ? 'positive' : 'negative'}>
                 <strong>
                   {summary.totalUnrealizedGainLoss >= 0 ? '+฿' : '-฿'}
-                  {Math.abs(summary.totalUnrealizedGainLoss).toLocaleString('th-TH', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
+                  {Math.abs(summary.totalUnrealizedGainLoss).toLocaleString('th-TH', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
                   })}
                 </strong>
               </td>
